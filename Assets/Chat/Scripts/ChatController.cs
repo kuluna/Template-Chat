@@ -11,6 +11,9 @@ public class ChatController : MonoBehaviour
     [SerializeField] private ChatNode chatNodePrefab = null!;
     [SerializeField] private Transform chatContentTransform = null!;
 
+
+    private ChatEventPresenter eventPresenter = new();
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
