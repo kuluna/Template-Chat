@@ -1,3 +1,7 @@
 @text, テストだよ！
 @wait, 2
 @text, ねぇ、聞いてる？
+@image, character
+@image, ss
+@wait, 1
+@text, これは画像表示のテストです。

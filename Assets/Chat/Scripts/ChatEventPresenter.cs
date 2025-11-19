@@ -47,6 +47,7 @@ public class ChatEventPresenter
         var CONTINUE_COMMANDS = new HashSet<CommandType>
         {
             CommandType.Unknown,
+            CommandType.Text,
             CommandType.Wait
         };
         if (CONTINUE_COMMANDS.Contains(commands.Last().Type))
@@ -101,6 +102,11 @@ public class ChatEventPresenter
                 await Awaitable.WaitForSecondsAsync(0.5f);
                 break;
 
+            case ImageChatCommand imageCommand:
+                await Listener.ShowImage(imageCommand);
+                await Awaitable.WaitForSecondsAsync(0.5f);
+                break;
+
             case WaitChatCommand waitCommand:
                 await Awaitable.WaitForSecondsAsync(waitCommand.Seconds);
                 break;
@@ -116,6 +122,7 @@ public class ChatEventPresenter
 
     public interface IChatEventListener
     {
+        public Awaitable ShowImage(ImageChatCommand command);
         public Awaitable ShowText(TextChatCommand command);
         public Awaitable OnEndChat();
     }

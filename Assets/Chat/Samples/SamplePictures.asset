@@ -15,3 +15,5 @@ MonoBehaviour:
   pictures:
   - pictureName: character
     sprite: {fileID: 21300000, guid: 8bee544c1fec94ad1bda40c98be4291d, type: 3}
+  - pictureName: ss
+    sprite: {fileID: 21300000, guid: 71bdd0fc2826345a5a48f0b5b7b7024d, type: 3}

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -5,10 +6,37 @@ using UnityEngine;
 
 public partial class ChatController : ChatEventPresenter.IChatEventListener
 {
+    public async Awaitable ShowImage(ImageChatCommand command)
+    {
+        if (pictures == null) return;
+
+        var sprite = pictures.pictures.FirstOrDefault(p => p.pictureName == command.ImageName)?.sprite;
+        if (sprite == null)
+        {
+            Debug.LogError($"Image '{command.ImageName}' not found in Pictures asset.");
+            return;
+        }
+
+        var node = Instantiate(imageNodePrefab, chatContentTransform);
+        node.SetUpImage(ChatNode.NodePosition.Left, sprite, (sprite) =>
+        {
+            ShowImage(sprite);
+        }, defaultIcon);
+
+        // スクロールを最下部に移動
+        chatScrollView.verticalNormalizedPosition = 1f;
+
+        await Task.CompletedTask;
+    }
+
     public async Awaitable ShowText(TextChatCommand command)
     {
-        //TODO: Implement text display logic here.
-        Debug.Log($"Displaying text: {string.Join(" ", command.Args)}");
+        var node = Instantiate(chatNodePrefab, chatContentTransform);
+        node.SetUpText(ChatNode.NodePosition.Left, command.Text, defaultIcon);
+
+        // スクロールを最下部に移動
+        chatScrollView.verticalNormalizedPosition = 1f;
+
         await Task.CompletedTask;
     }
 
