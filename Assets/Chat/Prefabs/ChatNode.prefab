@@ -502,6 +502,10 @@ MonoBehaviour:
   text: 
   leftColor: {r: 1, g: 1, b: 1, a: 1}
   rightColor: {r: 0.1960784, g: 0.8039216, b: 0.1960784, a: 1}
+  backgroundImage: {fileID: 6713366679564529281}
+  iconImage: {fileID: 746887136904436728}
+  messageText: {fileID: 857094596519654493}
+  iconSprite: {fileID: 0}
 --- !u!114 &4563686361851842467
 MonoBehaviour:
   m_ObjectHideFlags: 0

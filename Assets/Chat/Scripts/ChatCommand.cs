@@ -57,6 +57,18 @@ public class ChatCommandException : System.Exception
 
 ////////////////// Command classes //////////////////
 
+/// <summary>
+/// パースできない不明なコマンド
+/// </summary>
+public class UnknownChatCommand : ChatCommand
+{
+    public override CommandType Type => CommandType.Unknown;
+    public UnknownChatCommand(int index, string[] args) : base(index, args) { }
+    public override void Check()
+    {
+        throw new ChatCommandException(this, "不明なコマンドです。");
+    }
+}
 
 /// <summary>
 /// チャットテキスト表示コマンド

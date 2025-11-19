@@ -3,26 +3,51 @@ using UnityEngine;
 
 #nullable enable
 
-public class ChatController : MonoBehaviour
+public partial class ChatController : MonoBehaviour
 {
-    [SerializeField] private Pictures pictures = null!;
+    [SerializeField] private Pictures? pictures;
+    [SerializeField] private TextAsset? scenarioText;
 
     [Header("Chat UI Elements")]
     [SerializeField] private ChatNode chatNodePrefab = null!;
     [SerializeField] private Transform chatContentTransform = null!;
 
+    private readonly ChatEventPresenter presenter = new();
 
-    private ChatEventPresenter eventPresenter = new();
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Awake()
     {
-
+        if (pictures == null)
+        {
+            Debug.LogError("画像アセットが設定されていません。");
+        }
+        if (scenarioText == null)
+        {
+            Debug.LogError("シナリオテキストが設定されていません。");
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private async Awaitable Start()
     {
+        if (scenarioText != null)
+        {
+            presenter.Listener = this;
+            presenter.Setup(scenarioText!.text);
+            await presenter.Next();
+        }
+    }
 
+    private void OnDestroy()
+    {
+        presenter.Listener = null;
+    }
+
+    ///////// Callbacks ///////// 
+
+    public void OnClickNext()
+    {
+        if (presenter.CanMoveToNext)
+        {
+            _ = presenter.Next();
+        }
     }
 }

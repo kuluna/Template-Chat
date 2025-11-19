@@ -1,4 +1,7 @@
 {
+    "[csharp]": {
+        "editor.formatOnSave": true
+    },
     "files.exclude": {
         "**/.DS_Store": true,
         "**/.git": true,
@@ -67,5 +70,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Template-Chat.slnx"
+    "dotnet.defaultSolution": "Template-Chat.slnx",
 }
