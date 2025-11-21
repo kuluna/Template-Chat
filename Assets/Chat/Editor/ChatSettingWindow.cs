@@ -438,6 +438,120 @@ public class ChatSettingWindow : EditorWindow
         validationMessages = messages.ToArray();
     }
 
+    private void CopyRequiredPrefabs()
+    {
+        var folderPath = "Assets/ChatAssets/Prefabs";
+
+        // Create Prefabs folder if it doesn't exist
+        if (!AssetDatabase.IsValidFolder("Assets/ChatAssets"))
+        {
+            AssetDatabase.CreateFolder("Assets", "ChatAssets");
+        }
+        if (!AssetDatabase.IsValidFolder(folderPath))
+        {
+            AssetDatabase.CreateFolder("Assets/ChatAssets", "Prefabs");
+        }
+
+        // Get default TMP font asset
+        var tmpType = Type.GetType("TMPro.TMP_FontAsset, Unity.TextMeshPro");
+        object? defaultFont = null;
+
+        if (tmpType != null)
+        {
+            var tmpSettings = Resources.Load("TMP Settings");
+            if (tmpSettings != null)
+            {
+                var so = new SerializedObject((UnityEngine.Object)tmpSettings);
+                var fontProperty = so.FindProperty("m_defaultFontAsset");
+                if (fontProperty != null)
+                {
+                    defaultFont = fontProperty.objectReferenceValue;
+                }
+            }
+        }
+
+        // List of prefabs to copy
+        var prefabNames = new[] { "ChatNode", "ImageNode", "EndNode" };
+        var copiedPrefabs = new System.Collections.Generic.List<string>();
+
+        foreach (var prefabName in prefabNames)
+        {
+            var destinationPath = $"{folderPath}/{prefabName}.prefab";
+
+            // Skip if already exists
+            if (File.Exists(destinationPath))
+                continue;
+
+            // Find source prefab
+            var sourceGuids = AssetDatabase.FindAssets($"t:Prefab {prefabName}");
+            string? sourcePath = null;
+
+            foreach (var guid in sourceGuids)
+            {
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                if (Path.GetFileNameWithoutExtension(path) == prefabName && path.StartsWith("Packages/"))
+                {
+                    sourcePath = path;
+                    break;
+                }
+            }
+
+            // Fallback to direct package path
+            if (sourcePath == null)
+            {
+                sourcePath = $"Packages/jp.kuluna.lib.chattemplate/Prefabs/{prefabName}.prefab";
+            }
+
+            // Copy prefab
+            if (File.Exists(sourcePath) || AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath) != null)
+            {
+                AssetDatabase.CopyAsset(sourcePath, destinationPath);
+                copiedPrefabs.Add(destinationPath);
+            }
+            else
+            {
+                Debug.LogWarning($"Prefab not found: {prefabName}.prefab");
+            }
+        }
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        // Update TMP font in copied prefabs
+        if (defaultFont != null && tmpType != null)
+        {
+            var tmpUIType = Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
+            if (tmpUIType != null)
+            {
+                foreach (var prefabPath in copiedPrefabs)
+                {
+                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                    if (prefab == null)
+                        continue;
+
+                    var tmpComponents = prefab.GetComponentsInChildren(tmpUIType, true);
+                    if (tmpComponents.Length > 0)
+                    {
+                        foreach (var tmpComponent in tmpComponents)
+                        {
+                            var so = new SerializedObject(tmpComponent);
+                            var fontAssetProperty = so.FindProperty("m_fontAsset");
+                            if (fontAssetProperty != null)
+                            {
+                                fontAssetProperty.objectReferenceValue = (UnityEngine.Object)defaultFont;
+                                so.ApplyModifiedProperties();
+                            }
+                        }
+
+                        EditorUtility.SetDirty(prefab);
+                    }
+                }
+
+                AssetDatabase.SaveAssets();
+            }
+        }
+    }
+
     private void CreateChatScene()
     {
         // Final validation
@@ -499,6 +613,9 @@ public class ChatSettingWindow : EditorWindow
             return;
         }
 
+        // Copy necessary prefabs to Assets folder
+        CopyRequiredPrefabs();
+
         // Create new empty scene
         var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -544,6 +661,45 @@ public class ChatSettingWindow : EditorWindow
 
         // Unpack prefab to make it independent
         PrefabUtility.UnpackPrefabInstance(chatInstance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+
+        // Update TMP font in chat instance
+        var tmpType = Type.GetType("TMPro.TMP_FontAsset, Unity.TextMeshPro");
+        if (tmpType != null)
+        {
+            var tmpSettings = Resources.Load("TMP Settings");
+            if (tmpSettings != null)
+            {
+                var so = new SerializedObject((UnityEngine.Object)tmpSettings);
+                var fontProperty = so.FindProperty("m_defaultFontAsset");
+                if (fontProperty != null && fontProperty.objectReferenceValue != null)
+                {
+                    var defaultFont = fontProperty.objectReferenceValue;
+                    var tmpUIType = Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
+
+                    if (tmpUIType != null)
+                    {
+                        var tmpComponents = chatInstance.GetComponentsInChildren(tmpUIType, true);
+                        foreach (var tmpComponent in tmpComponents)
+                        {
+                            var tmpSO = new SerializedObject(tmpComponent);
+                            var fontAssetProperty = tmpSO.FindProperty("m_fontAsset");
+                            if (fontAssetProperty != null)
+                            {
+                                fontAssetProperty.objectReferenceValue = defaultFont;
+                                tmpSO.ApplyModifiedProperties();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Find and configure Canvas
+        var canvas = chatInstance.GetComponentInChildren<Canvas>();
+        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera)
+        {
+            canvas.worldCamera = camera;
+        }
 
         // Find ChatController and assign assets
         var chatController = chatInstance.GetComponentInChildren<ChatController>();
