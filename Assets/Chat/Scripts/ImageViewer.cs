@@ -1,16 +1,27 @@
 using UnityEngine;
+using UnityEngine.UI;
+
+#nullable enable
 
 public class ImageViewer : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [SerializeField] private GameObject backgroundPanel = null!;
+    [SerializeField] private Image displayImage = null!;
+
+    private void Awake()
     {
-        
+        backgroundPanel.SetActive(false);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Show(Sprite sprite)
     {
-        
+        displayImage.sprite = sprite;
+        backgroundPanel.SetActive(true);
+    }
+
+    public void Hide()
+    {
+        backgroundPanel.SetActive(false);
+        displayImage.sprite = null;
     }
 }

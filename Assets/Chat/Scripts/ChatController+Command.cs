@@ -20,7 +20,7 @@ public partial class ChatController : ChatEventPresenter.IChatEventListener
         var node = Instantiate(imageNodePrefab, chatContentTransform);
         node.SetUpImage(ChatNode.NodePosition.Left, sprite, (sprite) =>
         {
-            ShowImage(sprite);
+            ShowOnImageViewer(sprite);
         }, defaultIcon);
 
         // スクロールを最下部に移動

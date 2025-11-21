@@ -6,6 +6,9 @@ using UnityEngine.UI;
 
 public partial class ChatController : MonoBehaviour
 {
+    [Header("Data")]
+    [TextArea]
+    [SerializeField] private string description = "";
     [SerializeField] private Pictures? pictures;
     [SerializeField] private TextAsset? scenarioText;
     [SerializeField] private Sprite? defaultIcon;
@@ -18,6 +21,8 @@ public partial class ChatController : MonoBehaviour
     [SerializeField] private ScrollRect chatScrollView = null!;
     [SerializeField] private Transform chatContentTransform = null!;
     [SerializeField] private ChatChoiceDialog choiceDialog = null!;
+    [SerializeField] private ImageViewer imageViewer = null!;
+    [SerializeField] private DescriptionPanel descriptionPanel = null!;
 
     private readonly ChatEventPresenter presenter = new();
     private ChoiceChatCommand? currentChoiceCommand;
@@ -34,17 +39,24 @@ public partial class ChatController : MonoBehaviour
         }
     }
 
-    private async Awaitable Start()
+    private async void Start()
     {
         foreach (Transform obj in chatContentTransform)
         {
             Destroy(obj.gameObject);
         }
 
+        if (!string.IsNullOrEmpty(description))
+        {
+            descriptionPanel.Show(description);
+        }
+
         if (scenarioText != null)
         {
             presenter.Listener = this;
             presenter.Setup(scenarioText!.text);
+
+            await Awaitable.WaitForSecondsAsync(1);
             await presenter.Next();
         }
     }
@@ -54,19 +66,16 @@ public partial class ChatController : MonoBehaviour
         presenter.Listener = null;
     }
 
-    public void ShowImage(Sprite sprite)
-    {
-
-    }
-
     ///////// Callbacks ///////// 
 
-    public void OnClickNext()
+    public void OnClickCharacter()
     {
-        if (presenter.CanMoveToNext)
-        {
-            _ = presenter.Next();
-        }
+        descriptionPanel.Show(description);
+    }
+
+    public void ShowOnImageViewer(Sprite sprite)
+    {
+        imageViewer.Show(sprite);
     }
 
     public void OnClickSelectChoice(string choiceText)
