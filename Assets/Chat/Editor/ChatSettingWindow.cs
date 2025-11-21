@@ -456,7 +456,7 @@ public class ChatSettingWindow : EditorWindow
         }
 
         // Load Scene Template
-        // Search for the template in Packages
+        // Search for the template in both Assets and Packages
         var templateGuids = AssetDatabase.FindAssets("ChatSceneTemplate");
         SceneTemplateAsset? sceneTemplate = null;
         string? templatePath = null;
@@ -464,6 +464,13 @@ public class ChatSettingWindow : EditorWindow
         if (templateGuids.Length > 0)
         {
             templatePath = AssetDatabase.GUIDToAssetPath(templateGuids[0]);
+            sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
+        }
+
+        // Fallback to direct package path if not found
+        if (sceneTemplate == null)
+        {
+            templatePath = "Packages/jp.kuluna.lib.chattemplate/ChatSceneTemplate.scenetemplate";
             sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
         }
 
