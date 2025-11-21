@@ -40,7 +40,8 @@ public enum CommandType
     Choice,
     If,
     Label,
-    Wait
+    Wait,
+    Goto
 }
 
 public class ChatCommandException : System.Exception
@@ -136,31 +137,38 @@ public class ImageChatCommand : ChatCommand
 /// 選択肢表示コマンド。選択肢は3つまで指定可能です。
 /// <para>
 /// example:<br/>
-/// @choice, 選択肢1, 選択肢2, ...
+/// @choice, 変数名, 選択肢1, 選択肢2, ...
 /// </para>
 /// </summary>
 public class ChoiceChatCommand : ChatCommand
 {
     public override CommandType Type => CommandType.Choice;
+    public string VariableName { get; }
     public string[] Choices { get; }
 
     public ChoiceChatCommand(int index, string[] args) : base(index, args)
     {
-        Choices = Args[1..];
+        VariableName = Args[1];
+        Choices = Args[2..];
     }
 
     public override void Check()
     {
-        if (Args.Length < 2 || Args.Length > 4)
+        if (Args.Length < 3 || Args.Length > 5)
         {
-            throw new ChatCommandException(this, "必要な引数が不足か多いです。\nex: @choice, <選択肢1>, <選択肢2>, ...");
+            throw new ChatCommandException(this, "必要な引数が不足か多いです。\nex: @choice, <変数名>, <選択肢1>, <選択肢2>, ...");
         }
 
-        for (int i = 1; i < Args.Length; i++)
+        if (string.IsNullOrWhiteSpace(Args[1]))
+        {
+            throw new ChatCommandException(this, "変数名が空です。\nex: @choice, <変数名>, <選択肢1>, <選択肢2>, ...");
+        }
+
+        for (int i = 2; i < Args.Length; i++)
         {
             if (string.IsNullOrWhiteSpace(Args[i]))
             {
-                throw new ChatCommandException(this, $"選択肢{i}が空です。\nex: @choice, <選択肢1>, <選択肢2>, ...");
+                throw new ChatCommandException(this, $"選択肢{i - 1}が空です。\nex: @choice, <変数名>, <選択肢1>, <選択肢2>, ...");
             }
         }
     }
@@ -183,7 +191,7 @@ public class IfChatCommand : ChatCommand
 
     public EvalType ValueEvalType { get; }
 
-    private static readonly Regex NumericComparePattern = new(@"^(>|<|=)?");
+    private static readonly Regex NumericComparePattern = new(@"^(>|<|=)(.+)$");
 
     public IfChatCommand(int index, string[] args) : base(index, args)
     {
@@ -195,6 +203,7 @@ public class IfChatCommand : ChatCommand
         {
             "true" or "false" => EvalType.Boolean,
             _ when NumericComparePattern.IsMatch(ExpectedValue) => EvalType.Numeric,
+            _ when double.TryParse(ExpectedValue, out _) => EvalType.Numeric,
             _ => EvalType.String
         };
 
@@ -237,7 +246,61 @@ public class IfChatCommand : ChatCommand
                     throw new ChatCommandException(this, "数値比較の期待値が不正です。\nex: 20, =20, >20, <20");
                 }
             }
+            else
+            {
+                // 比較演算子がない場合、数値としてパースできるか確認
+                if (!double.TryParse(ExpectedValue, out _))
+                {
+                    throw new ChatCommandException(this, "数値比較の期待値が不正です。\nex: 20, =20, >20, <20");
+                }
+            }
         }
+    }
+
+    public bool Evaluate(string actualValue)
+    {
+        return ValueEvalType switch
+        {
+            EvalType.String => actualValue == ExpectedValue,
+            EvalType.Boolean => bool.TryParse(actualValue, out var boolValue) &&
+                                 boolValue == bool.Parse(ExpectedValue),
+            EvalType.Numeric => EvaluateNumeric(actualValue),
+            _ => false
+        };
+    }
+
+    private bool EvaluateNumeric(string actualValue)
+    {
+        if (!double.TryParse(actualValue, out var actual))
+        {
+            return false;
+        }
+
+        // 比較演算子を抽出
+        var op = ExpectedValue[0];
+        var expectedNumStr = ExpectedValue;
+
+        if (op == '>' || op == '<' || op == '=')
+        {
+            expectedNumStr = ExpectedValue[1..];
+        }
+        else
+        {
+            op = '='; // デフォルトは等号
+        }
+
+        if (!double.TryParse(expectedNumStr, out var expected))
+        {
+            return false;
+        }
+
+        return op switch
+        {
+            '>' => actual > expected,
+            '<' => actual < expected,
+            '=' => System.Math.Abs(actual - expected) < 0.0001, // 浮動小数点誤差を考慮
+            _ => false
+        };
     }
 
     public enum EvalType
@@ -306,6 +369,37 @@ public class WaitChatCommand : ChatCommand
         if (!float.TryParse(Args[1], out var duration) || duration <= 0 || duration > 5)
         {
             throw new ChatCommandException(this, "5秒以下の数値で指定してください。");
+        }
+    }
+}
+
+/// <summary>
+/// ラベルジャンプコマンド
+/// <para>
+/// example:<br/>
+/// @goto, EndLabel
+/// </para>
+/// </summary>
+public class GotoChatCommand : ChatCommand
+{
+    public override CommandType Type => CommandType.Goto;
+    public string GotoLabel { get; }
+
+    public GotoChatCommand(int index, string[] args) : base(index, args)
+    {
+        GotoLabel = Args[1];
+    }
+
+    public override void Check()
+    {
+        if (Args.Length != 2)
+        {
+            throw new ChatCommandException(this, "必要な引数が不足か多いです。\nex: @goto, <ラベル名>");
+        }
+
+        if (string.IsNullOrWhiteSpace(Args[1]))
+        {
+            throw new ChatCommandException(this, "ラベル名が空です。\nex: @goto, <ラベル名>");
         }
     }
 }

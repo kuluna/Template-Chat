@@ -88,12 +88,26 @@ public class ChatCommandTest
     public class Choice
     {
         [Test]
-        public void Parseable_OneChoice()
+        public void Parseable()
         {
-            var text = "@choice, Option1";
+            var text = "@choice, user_choice, Option1, Option2";
             var command = new ChoiceChatCommand(0, text.Split(','));
 
             Assert.AreEqual(CommandType.Choice, command.Type);
+            Assert.AreEqual("user_choice", command.VariableName);
+            Assert.AreEqual(2, command.Choices.Length);
+            Assert.AreEqual("Option1", command.Choices[0]);
+            Assert.AreEqual("Option2", command.Choices[1]);
+        }
+
+        [Test]
+        public void Parseable_OneChoice()
+        {
+            var text = "@choice, my_var, Option1";
+            var command = new ChoiceChatCommand(0, text.Split(','));
+
+            Assert.AreEqual(CommandType.Choice, command.Type);
+            Assert.AreEqual("my_var", command.VariableName);
             Assert.AreEqual(1, command.Choices.Length);
             Assert.AreEqual("Option1", command.Choices[0]);
         }
@@ -101,10 +115,11 @@ public class ChatCommandTest
         [Test]
         public void Parseable_ThreeChoices()
         {
-            var text = "@choice, Option1, Option2, Option3";
+            var text = "@choice, my_var, Option1, Option2, Option3";
             var command = new ChoiceChatCommand(0, text.Split(','));
 
             Assert.AreEqual(CommandType.Choice, command.Type);
+            Assert.AreEqual("my_var", command.VariableName);
             Assert.AreEqual(3, command.Choices.Length);
             Assert.AreEqual("Option1", command.Choices[0]);
             Assert.AreEqual("Option2", command.Choices[1]);
@@ -114,7 +129,18 @@ public class ChatCommandTest
         [Test]
         public void InvalidChoiceCommand_MissingArgument()
         {
-            var text = "@choice"; // Missing choice arguments
+            var text = "@choice"; // Missing variable name and choices
+            Assert.Throws<ChatCommandException>(() =>
+            {
+                var command = new ChoiceChatCommand(0, text.Split(','));
+                Assert.Fail("Expected ChatCommandException was not thrown.");
+            });
+        }
+
+        [Test]
+        public void InvalidChoiceCommand_MissingChoices()
+        {
+            var text = "@choice, var_name"; // Missing choice arguments
             Assert.Throws<ChatCommandException>(() =>
             {
                 var command = new ChoiceChatCommand(0, text.Split(','));
@@ -125,7 +151,18 @@ public class ChatCommandTest
         [Test]
         public void InvalidChoiceCommand_TooManyChoices()
         {
-            var text = "@choice, Option1, Option2, Option3, Option4"; // More than 3 choices
+            var text = "@choice, var_name, Option1, Option2, Option3, Option4"; // More than 3 choices
+            Assert.Throws<ChatCommandException>(() =>
+            {
+                var command = new ChoiceChatCommand(0, text.Split(','));
+                Assert.Fail("Expected ChatCommandException was not thrown.");
+            });
+        }
+
+        [Test]
+        public void InvalidChoiceCommand_EmptyVariableName()
+        {
+            var text = "@choice,   , Option1, Option2"; // Variable name is empty after trimming
             Assert.Throws<ChatCommandException>(() =>
             {
                 var command = new ChoiceChatCommand(0, text.Split(','));
@@ -136,7 +173,7 @@ public class ChatCommandTest
         [Test]
         public void InvalidChoiceCommand_EmptyChoice()
         {
-            var text = "@choice, Option1,   "; // Second choice is empty after trimming
+            var text = "@choice, var_name, Option1,   "; // Second choice is empty after trimming
             Assert.Throws<ChatCommandException>(() =>
             {
                 var command = new ChoiceChatCommand(0, text.Split(','));
@@ -147,7 +184,7 @@ public class ChatCommandTest
         [Test]
         public void InvalidChoiceCommand_EmptyFirstChoice()
         {
-            var text = "@choice,   , Option2"; // First choice is empty after trimming
+            var text = "@choice, var_name,   , Option2"; // First choice is empty after trimming
             Assert.Throws<ChatCommandException>(() =>
             {
                 var command = new ChoiceChatCommand(0, text.Split(','));
@@ -445,6 +482,52 @@ public class ChatCommandTest
             Assert.Throws<ChatCommandException>(() =>
             {
                 var command = new WaitChatCommand(0, text.Split(','));
+                Assert.Fail("Expected ChatCommandException was not thrown.");
+            });
+        }
+    }
+
+    public class Goto
+    {
+        [Test]
+        public void Parseable()
+        {
+            var text = "@goto, EndLabel";
+            var command = new GotoChatCommand(0, text.Split(','));
+
+            Assert.AreEqual(CommandType.Goto, command.Type);
+            Assert.AreEqual("EndLabel", command.GotoLabel);
+        }
+
+        [Test]
+        public void InvalidGotoCommand_MissingLabel()
+        {
+            var text = "@goto"; // Missing label argument
+            Assert.Throws<ChatCommandException>(() =>
+            {
+                var command = new GotoChatCommand(0, text.Split(','));
+                Assert.Fail("Expected ChatCommandException was not thrown.");
+            });
+        }
+
+        [Test]
+        public void InvalidGotoCommand_EmptyLabel()
+        {
+            var text = "@goto,   "; // Label is empty after trimming
+            Assert.Throws<ChatCommandException>(() =>
+            {
+                var command = new GotoChatCommand(0, text.Split(','));
+                Assert.Fail("Expected ChatCommandException was not thrown.");
+            });
+        }
+
+        [Test]
+        public void InvalidGotoCommand_TooManyArguments()
+        {
+            var text = "@goto, Label1, Label2"; // Too many arguments
+            Assert.Throws<ChatCommandException>(() =>
+            {
+                var command = new GotoChatCommand(0, text.Split(','));
                 Assert.Fail("Expected ChatCommandException was not thrown.");
             });
         }

@@ -24,7 +24,7 @@ public partial class ChatController : ChatEventPresenter.IChatEventListener
         }, defaultIcon);
 
         // スクロールを最下部に移動
-        chatScrollView.verticalNormalizedPosition = 1f;
+        chatScrollView.verticalNormalizedPosition = 0f;
 
         await Task.CompletedTask;
     }
@@ -35,7 +35,7 @@ public partial class ChatController : ChatEventPresenter.IChatEventListener
         node.SetUpText(ChatNode.NodePosition.Left, command.Text, defaultIcon);
 
         // スクロールを最下部に移動
-        chatScrollView.verticalNormalizedPosition = 1f;
+        chatScrollView.verticalNormalizedPosition = 0f;
 
         await Task.CompletedTask;
     }
@@ -44,5 +44,11 @@ public partial class ChatController : ChatEventPresenter.IChatEventListener
     {
         Debug.Log("Chat has ended.");
         await Task.CompletedTask;
+    }
+
+    public void ShowChoice(ChoiceChatCommand command)
+    {
+        currentChoiceCommand = command;
+        choiceDialog.Setup(command, OnClickSelectChoice);
     }
 }

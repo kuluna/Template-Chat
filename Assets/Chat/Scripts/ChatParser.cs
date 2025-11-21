@@ -23,7 +23,7 @@ public class ChatParser
 {
     public string RawText { get; private set; } = string.Empty;
     public List<IChatCommand> Commands { get; } = new();
-    public int CommandIndex { get; private set; } = 0;
+    public int CommandIndex { get; set; } = 0;
 
     private string[] lines = new string[0];
 
@@ -56,6 +56,7 @@ public class ChatParser
             "@if" => new IfChatCommand(index, args),
             "@label" => new LabelChatCommand(index, args),
             "@wait" => new WaitChatCommand(index, args),
+            "@goto" => new GotoChatCommand(index, args),
             _ => new UnknownChatCommand(index, args),
         };
     }
@@ -66,8 +67,10 @@ public class ChatParser
         var BREAK_COMMANDS = new CommandType[]
         {
             CommandType.Text,
+            CommandType.Choice,
             CommandType.If,
-            CommandType.Wait
+            CommandType.Wait,
+            CommandType.Goto
         };
 
         while (CommandIndex < Commands.Count)
