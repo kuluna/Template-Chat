@@ -481,7 +481,7 @@ public class ChatSettingWindow : EditorWindow
         }
 
         // Load Scene Template
-        var templatePath = "Assets/Settings/Scenes/ChatSceneTemplate.scenetemplate";
+        var templatePath = "Assets/Chat/ChatSceneTemplate.scenetemplate";
         var sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
 
         if (sceneTemplate == null)
