@@ -262,10 +262,9 @@ public class ChatSettingWindow : EditorWindow
         var destinationPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/Scenario.txt");
 
         // Create sample scenario content
-        var sampleContent = @"@text, テストだよ！
-                            @wait, 2
-                            @text, ねぇ、聞いてる？
-                            ";
+        var sampleContent = "@text, テストだよ！\n" +
+                            "@wait, 2\n" +
+                            "@text, ねぇ、聞いてる？\n";
 
         // Write the file
         File.WriteAllText(destinationPath, sampleContent);
@@ -458,7 +457,7 @@ public class ChatSettingWindow : EditorWindow
 
         // Load Scene Template
         // Search for the template in Packages
-        var templateGuids = AssetDatabase.FindAssets("t:SceneTemplateAsset ChatSceneTemplate");
+        var templateGuids = AssetDatabase.FindAssets("ChatSceneTemplate");
         SceneTemplateAsset? sceneTemplate = null;
         string? templatePath = null;
 
