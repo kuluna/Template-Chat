@@ -24,9 +24,8 @@ public partial class ChatController : ChatEventPresenter.IChatEventListener
         }, defaultIcon);
 
         // スクロールを最下部に移動
+        await Awaitable.EndOfFrameAsync();
         chatScrollView.verticalNormalizedPosition = 0f;
-
-        await Task.CompletedTask;
     }
 
     public async Awaitable ShowText(TextChatCommand command)
@@ -35,14 +34,14 @@ public partial class ChatController : ChatEventPresenter.IChatEventListener
         node.SetUpText(ChatNode.NodePosition.Left, command.Text, defaultIcon);
 
         // スクロールを最下部に移動
+        await Awaitable.EndOfFrameAsync();
         chatScrollView.verticalNormalizedPosition = 0f;
-
-        await Task.CompletedTask;
     }
 
     public async Awaitable OnEndChat()
     {
-        Debug.Log("Chat has ended.");
+        Debug.Log("Chat終了");
+        Instantiate(endNodePrefab, chatContentTransform);
         await Task.CompletedTask;
     }
 

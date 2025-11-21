@@ -13,6 +13,7 @@ public partial class ChatController : MonoBehaviour
     [Header("Chat UI Elements")]
     [SerializeField] private ChatNode chatNodePrefab = null!;
     [SerializeField] private ChatNode imageNodePrefab = null!;
+    [SerializeField] private RectTransform endNodePrefab = null!;
     [Space]
     [SerializeField] private ScrollRect chatScrollView = null!;
     [SerializeField] private Transform chatContentTransform = null!;
