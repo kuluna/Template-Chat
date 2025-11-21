@@ -5,10 +5,9 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEditor.SceneTemplate;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
+using UnityEngine.InputSystem.UI;
 
 public class ChatSettingWindow : EditorWindow
 {
@@ -455,31 +454,33 @@ public class ChatSettingWindow : EditorWindow
             return;
         }
 
-        // Load Scene Template
-        // Search for the template in both Assets and Packages
-        var templateGuids = AssetDatabase.FindAssets("ChatSceneTemplate");
-        SceneTemplateAsset? sceneTemplate = null;
-        string? templatePath = null;
+        // Load Chat Prefab
+        var prefabGuids = AssetDatabase.FindAssets("t:Prefab Chat");
+        GameObject? chatPrefab = null;
 
-        if (templateGuids.Length > 0)
+        foreach (var guid in prefabGuids)
         {
-            templatePath = AssetDatabase.GUIDToAssetPath(templateGuids[0]);
-            sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (Path.GetFileNameWithoutExtension(path) == "Chat")
+            {
+                chatPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                break;
+            }
         }
 
         // Fallback to direct package path if not found
-        if (sceneTemplate == null)
+        if (chatPrefab == null)
         {
-            templatePath = "Packages/jp.kuluna.lib.chattemplate/ChatSceneTemplate.scenetemplate";
-            sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
+            chatPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+                "Packages/jp.kuluna.lib.chattemplate/Prefabs/Chat.prefab"
+            );
         }
 
-        if (sceneTemplate == null)
+        if (chatPrefab == null)
         {
             EditorUtility.DisplayDialog(
                 "Error",
-                "Scene Template 'ChatSceneTemplate' not found.\n" +
-                "Please ensure the template exists in the project.",
+                "Chat Prefab not found.\nPlease ensure 'Chat.prefab' exists in the package.",
                 "OK"
             );
             return;
@@ -495,49 +496,73 @@ public class ChatSettingWindow : EditorWindow
 
         if (string.IsNullOrEmpty(scenePath))
         {
-            EditorUtility.DisplayDialog(
-                "Cancelled",
-                "Scene creation was cancelled.",
-                "OK"
-            );
             return;
         }
 
-        // Instantiate scene from template
-        var instantiateResult = SceneTemplateService.Instantiate(sceneTemplate, false, scenePath);
+        // Create new empty scene
+        var newScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-        if (instantiateResult == null || instantiateResult.scene == null)
+        // Create Camera
+        var cameraGO = new GameObject("Main Camera");
+        var camera = cameraGO.AddComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = Color.black;
+        camera.orthographic = true;
+        camera.orthographicSize = 5;
+        cameraGO.tag = "MainCamera";
+        cameraGO.AddComponent<AudioListener>();
+
+        // Create Light2D (if available)
+        var light2DType = Type.GetType("UnityEngine.Rendering.Universal.Light2D, Unity.RenderPipelines.Universal.Runtime");
+        if (light2DType != null)
         {
-            EditorUtility.DisplayDialog(
-                "Error",
-                "Failed to create scene from template.",
-                "OK"
-            );
-            return;
+            var lightGO = new GameObject("Global Light 2D");
+            var light2D = lightGO.AddComponent(light2DType) as Component;
+            if (light2D != null)
+            {
+                // Set light type to Global using reflection
+                var lightTypeProperty = light2DType.GetProperty("lightType");
+                if (lightTypeProperty != null)
+                {
+                    var lightTypeEnum = light2DType.Assembly.GetType("UnityEngine.Rendering.Universal.Light2D+LightType");
+                    if (lightTypeEnum != null)
+                    {
+                        var globalValue = Enum.Parse(lightTypeEnum, "Global");
+                        lightTypeProperty.SetValue(light2D, globalValue);
+                    }
+                }
+            }
         }
 
-        // Find ChatController in the new scene
-        var chatController = GameObject.FindFirstObjectByType<ChatController>();
+        // Create EventSystem
+        var eventSystemGO = new GameObject("EventSystem");
+        eventSystemGO.AddComponent<EventSystem>();
+        eventSystemGO.AddComponent<InputSystemUIInputModule>();
 
+        // Instantiate Chat Prefab
+        var chatInstance = (GameObject)PrefabUtility.InstantiatePrefab(chatPrefab);
+
+        // Unpack prefab to make it independent
+        PrefabUtility.UnpackPrefabInstance(chatInstance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+
+        // Find ChatController and assign assets
+        var chatController = chatInstance.GetComponent<ChatController>();
         if (chatController != null)
         {
-            // Assign serialized fields using SerializedObject
             var so = new SerializedObject(chatController);
-
             so.FindProperty("description").stringValue = description;
             so.FindProperty("pictures").objectReferenceValue = picturesAsset;
             so.FindProperty("scenarioText").objectReferenceValue = scenarioText;
             so.FindProperty("defaultIcon").objectReferenceValue = characterSprite;
-
             so.ApplyModifiedProperties();
         }
         else
         {
-            Debug.LogWarning("ChatController not found in the created scene. Please assign assets manually.");
+            Debug.LogWarning("ChatController not found in the Chat prefab. Please assign assets manually.");
         }
 
         // Save the scene
-        EditorSceneManager.SaveScene(instantiateResult.scene);
+        EditorSceneManager.SaveScene(newScene, scenePath);
 
         // Add scene to build settings at the top
         var scenesInBuild = EditorBuildSettings.scenes.ToList();
