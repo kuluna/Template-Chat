@@ -253,17 +253,6 @@ public class ChatSettingWindow : EditorWindow
 
     private void CreateSampleScenario()
     {
-        var samplePath = "Assets/Chat/Samples/SampleText.txt";
-        if (!File.Exists(samplePath))
-        {
-            EditorUtility.DisplayDialog(
-                "Error",
-                $"Sample text file not found at:\n{samplePath}",
-                "OK"
-            );
-            return;
-        }
-
         var folderPath = "Assets/ChatAssets";
         if (!AssetDatabase.IsValidFolder(folderPath))
         {
@@ -271,7 +260,15 @@ public class ChatSettingWindow : EditorWindow
         }
 
         var destinationPath = AssetDatabase.GenerateUniqueAssetPath($"{folderPath}/Scenario.txt");
-        AssetDatabase.CopyAsset(samplePath, destinationPath);
+
+        // Create sample scenario content
+        var sampleContent = @"@text, テストだよ！
+                            @wait, 2
+                            @text, ねぇ、聞いてる？
+                            ";
+
+        // Write the file
+        File.WriteAllText(destinationPath, sampleContent);
         AssetDatabase.Refresh();
 
         scenarioText = AssetDatabase.LoadAssetAtPath<TextAsset>(destinationPath);
@@ -440,27 +437,6 @@ public class ChatSettingWindow : EditorWindow
             messages.Add("✓ TextMeshPro is imported.");
         }
 
-        // Check prefabs
-        var prefabPaths = new[]
-        {
-            "Assets/Chat/Prefabs/ChatNode.prefab",
-            "Assets/Chat/Prefabs/ImageNode.prefab",
-            "Assets/Chat/Prefabs/EndNode.prefab"
-        };
-
-        foreach (var path in prefabPaths)
-        {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (prefab == null)
-            {
-                messages.Add($"✗ Prefab not found: {Path.GetFileName(path)}");
-            }
-            else
-            {
-                messages.Add($"✓ Prefab found: {Path.GetFileName(path)}");
-            }
-        }
-
         validationMessages = messages.ToArray();
     }
 
@@ -481,14 +457,23 @@ public class ChatSettingWindow : EditorWindow
         }
 
         // Load Scene Template
-        var templatePath = "Assets/Chat/ChatSceneTemplate.scenetemplate";
-        var sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
+        // Search for the template in Packages
+        var templateGuids = AssetDatabase.FindAssets("t:SceneTemplateAsset ChatSceneTemplate");
+        SceneTemplateAsset? sceneTemplate = null;
+        string? templatePath = null;
+
+        if (templateGuids.Length > 0)
+        {
+            templatePath = AssetDatabase.GUIDToAssetPath(templateGuids[0]);
+            sceneTemplate = AssetDatabase.LoadAssetAtPath<SceneTemplateAsset>(templatePath);
+        }
 
         if (sceneTemplate == null)
         {
             EditorUtility.DisplayDialog(
                 "Error",
-                $"Scene Template not found at:\n{templatePath}",
+                "Scene Template 'ChatSceneTemplate' not found.\n" +
+                "Please ensure the template exists in the project.",
                 "OK"
             );
             return;
