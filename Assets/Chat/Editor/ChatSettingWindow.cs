@@ -543,10 +543,10 @@ public class ChatSettingWindow : EditorWindow
         var chatInstance = (GameObject)PrefabUtility.InstantiatePrefab(chatPrefab);
 
         // Unpack prefab to make it independent
-        PrefabUtility.UnpackPrefabInstance(chatInstance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+        PrefabUtility.UnpackPrefabInstance(chatInstance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
 
         // Find ChatController and assign assets
-        var chatController = chatInstance.GetComponent<ChatController>();
+        var chatController = chatInstance.GetComponentInChildren<ChatController>();
         if (chatController != null)
         {
             var so = new SerializedObject(chatController);
