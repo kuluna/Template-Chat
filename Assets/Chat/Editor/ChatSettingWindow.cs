@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -328,51 +329,15 @@ public class ChatSettingWindow : EditorWindow
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            // Optionally set as default
-            if (EditorUtility.DisplayDialog(
-                "Success",
-                $"TMP Font Asset created at:\n{assetPath}\n\nSet as default font?",
-                "Yes",
-                "No"
-            ))
-            {
-                SetDefaultTMPFont(fontAsset);
-            }
-
-            japaneseFont = null;
+            EditorUtility.DisplayDialog(
+                    "Success",
+                    "The TMP Font Asset has been created and set as the default font.",
+                    "OK"
+                );
         }
         catch (Exception ex)
         {
             EditorUtility.DisplayDialog("Error", $"Failed to create TMP Font Asset:\n{ex.Message}", "OK");
-        }
-    }
-
-    private void SetDefaultTMPFont(object fontAsset)
-    {
-        try
-        {
-            var tmpSettingsType = Type.GetType("TMPro.TMP_Settings, Unity.TextMeshPro");
-            if (tmpSettingsType == null)
-                return;
-
-            var settings = Resources.Load("TMP Settings");
-            if (settings == null)
-                return;
-
-            var serializedObject = new SerializedObject((UnityEngine.Object)settings);
-            var defaultFontProperty = serializedObject.FindProperty("m_defaultFontAsset");
-
-            if (defaultFontProperty != null)
-            {
-                defaultFontProperty.objectReferenceValue = (UnityEngine.Object)fontAsset;
-                serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty((UnityEngine.Object)settings);
-                AssetDatabase.SaveAssets();
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning($"Failed to set default TMP font: {ex.Message}");
         }
     }
 
@@ -452,25 +417,18 @@ public class ChatSettingWindow : EditorWindow
             AssetDatabase.CreateFolder("Assets/ChatAssets", "Prefabs");
         }
 
-        // Get default TMP font asset
-        var tmpType = Type.GetType("TMPro.TMP_FontAsset, Unity.TextMeshPro");
-        object? defaultFont = null;
-
-        if (tmpType != null)
+        TMP_FontAsset? defaultFont = null;
+        var tmpSettings = Resources.Load("TMP Settings");
+        if (tmpSettings != null)
         {
-            var tmpSettings = Resources.Load("TMP Settings");
-            if (tmpSettings != null)
+            var so = new SerializedObject(tmpSettings);
+            var fontProperty = so.FindProperty("m_defaultFontAsset");
+            if (fontProperty != null)
             {
-                var so = new SerializedObject((UnityEngine.Object)tmpSettings);
-                var fontProperty = so.FindProperty("m_defaultFontAsset");
-                if (fontProperty != null)
-                {
-                    defaultFont = fontProperty.objectReferenceValue;
-                }
+                defaultFont = fontProperty.objectReferenceValue as TMP_FontAsset;
             }
         }
 
-        // List of prefabs to copy
         var prefabNames = new[] { "ChatNode", "ImageNode", "EndNode" };
         var copiedPrefabs = new System.Collections.Generic.List<string>();
 
@@ -517,38 +475,33 @@ public class ChatSettingWindow : EditorWindow
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        // Update TMP font in copied prefabs
-        if (defaultFont != null && tmpType != null)
+        if (defaultFont != null)
         {
-            var tmpUIType = Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
-            if (tmpUIType != null)
+            foreach (var prefabPath in copiedPrefabs)
             {
-                foreach (var prefabPath in copiedPrefabs)
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                if (prefab == null)
+                    continue;
+
+                var tmpComponents = prefab.GetComponentsInChildren<TextMeshProUGUI>(true);
+                if (tmpComponents.Length > 0)
                 {
-                    var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                    if (prefab == null)
-                        continue;
-
-                    var tmpComponents = prefab.GetComponentsInChildren(tmpUIType, true);
-                    if (tmpComponents.Length > 0)
+                    foreach (var tmpComponent in tmpComponents)
                     {
-                        foreach (var tmpComponent in tmpComponents)
+                        var so = new SerializedObject(tmpComponent);
+                        var fontAssetProperty = so.FindProperty("m_fontAsset");
+                        if (fontAssetProperty != null)
                         {
-                            var so = new SerializedObject(tmpComponent);
-                            var fontAssetProperty = so.FindProperty("m_fontAsset");
-                            if (fontAssetProperty != null)
-                            {
-                                fontAssetProperty.objectReferenceValue = (UnityEngine.Object)defaultFont;
-                                so.ApplyModifiedProperties();
-                            }
+                            fontAssetProperty.objectReferenceValue = defaultFont;
+                            so.ApplyModifiedProperties();
                         }
-
-                        EditorUtility.SetDirty(prefab);
                     }
-                }
 
-                AssetDatabase.SaveAssets();
+                    EditorUtility.SetDirty(prefab);
+                }
             }
+
+            AssetDatabase.SaveAssets();
         }
     }
 
@@ -662,9 +615,15 @@ public class ChatSettingWindow : EditorWindow
         // Unpack prefab to make it independent
         PrefabUtility.UnpackPrefabInstance(chatInstance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
 
-        // Update TMP font in chat instance
-        var tmpType = Type.GetType("TMPro.TMP_FontAsset, Unity.TextMeshPro");
-        if (tmpType != null)
+        // Find and configure Canvas
+        var canvas = chatInstance.GetComponentInChildren<Canvas>();
+        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera)
+        {
+            canvas.worldCamera = camera;
+        }
+
+        // Update TMP font in Canvas hierarchy
+        if (canvas != null)
         {
             var tmpSettings = Resources.Load("TMP Settings");
             if (tmpSettings != null)
@@ -673,12 +632,10 @@ public class ChatSettingWindow : EditorWindow
                 var fontProperty = so.FindProperty("m_defaultFontAsset");
                 if (fontProperty != null && fontProperty.objectReferenceValue != null)
                 {
-                    var defaultFont = fontProperty.objectReferenceValue;
-                    var tmpUIType = Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
-
-                    if (tmpUIType != null)
+                    var defaultFont = fontProperty.objectReferenceValue as TMP_FontAsset;
+                    if (defaultFont != null)
                     {
-                        var tmpComponents = chatInstance.GetComponentsInChildren(tmpUIType, true);
+                        var tmpComponents = canvas.GetComponentsInChildren<TextMeshProUGUI>(true);
                         foreach (var tmpComponent in tmpComponents)
                         {
                             var tmpSO = new SerializedObject(tmpComponent);
@@ -692,13 +649,6 @@ public class ChatSettingWindow : EditorWindow
                     }
                 }
             }
-        }
-
-        // Find and configure Canvas
-        var canvas = chatInstance.GetComponentInChildren<Canvas>();
-        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera)
-        {
-            canvas.worldCamera = camera;
         }
 
         // Find ChatController and assign assets
