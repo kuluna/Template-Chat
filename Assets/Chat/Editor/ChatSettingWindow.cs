@@ -329,6 +329,20 @@ public class ChatSettingWindow : EditorWindow
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            // Set as default font in TMP Settings
+            var tmpSettings = Resources.Load("TMP Settings");
+            if (tmpSettings != null)
+            {
+                var so = new SerializedObject(tmpSettings);
+                var fontProperty = so.FindProperty("m_defaultFontAsset");
+                if (fontProperty != null)
+                {
+                    fontProperty.objectReferenceValue = fontAsset as UnityEngine.Object;
+                    so.ApplyModifiedProperties();
+                    AssetDatabase.SaveAssets();
+                }
+            }
+
             EditorUtility.DisplayDialog(
                     "Success",
                     "The TMP Font Asset has been created and set as the default font.",
@@ -417,20 +431,7 @@ public class ChatSettingWindow : EditorWindow
             AssetDatabase.CreateFolder("Assets/ChatAssets", "Prefabs");
         }
 
-        TMP_FontAsset? defaultFont = null;
-        var tmpSettings = Resources.Load("TMP Settings");
-        if (tmpSettings != null)
-        {
-            var so = new SerializedObject(tmpSettings);
-            var fontProperty = so.FindProperty("m_defaultFontAsset");
-            if (fontProperty != null)
-            {
-                defaultFont = fontProperty.objectReferenceValue as TMP_FontAsset;
-            }
-        }
-
         var prefabNames = new[] { "ChatNode", "ImageNode", "EndNode" };
-        var copiedPrefabs = new System.Collections.Generic.List<string>();
 
         foreach (var prefabName in prefabNames)
         {
@@ -464,7 +465,6 @@ public class ChatSettingWindow : EditorWindow
             if (File.Exists(sourcePath) || AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath) != null)
             {
                 AssetDatabase.CopyAsset(sourcePath, destinationPath);
-                copiedPrefabs.Add(destinationPath);
             }
             else
             {
@@ -474,35 +474,6 @@ public class ChatSettingWindow : EditorWindow
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-
-        if (defaultFont != null)
-        {
-            foreach (var prefabPath in copiedPrefabs)
-            {
-                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                if (prefab == null)
-                    continue;
-
-                var tmpComponents = prefab.GetComponentsInChildren<TextMeshProUGUI>(true);
-                if (tmpComponents.Length > 0)
-                {
-                    foreach (var tmpComponent in tmpComponents)
-                    {
-                        var so = new SerializedObject(tmpComponent);
-                        var fontAssetProperty = so.FindProperty("m_fontAsset");
-                        if (fontAssetProperty != null)
-                        {
-                            fontAssetProperty.objectReferenceValue = defaultFont;
-                            so.ApplyModifiedProperties();
-                        }
-                    }
-
-                    EditorUtility.SetDirty(prefab);
-                }
-            }
-
-            AssetDatabase.SaveAssets();
-        }
     }
 
     private void CreateChatScene()
@@ -620,35 +591,6 @@ public class ChatSettingWindow : EditorWindow
         if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera)
         {
             canvas.worldCamera = camera;
-        }
-
-        // Update TMP font in Canvas hierarchy
-        if (canvas != null)
-        {
-            var tmpSettings = Resources.Load("TMP Settings");
-            if (tmpSettings != null)
-            {
-                var so = new SerializedObject((UnityEngine.Object)tmpSettings);
-                var fontProperty = so.FindProperty("m_defaultFontAsset");
-                if (fontProperty != null && fontProperty.objectReferenceValue != null)
-                {
-                    var defaultFont = fontProperty.objectReferenceValue as TMP_FontAsset;
-                    if (defaultFont != null)
-                    {
-                        var tmpComponents = canvas.GetComponentsInChildren<TextMeshProUGUI>(true);
-                        foreach (var tmpComponent in tmpComponents)
-                        {
-                            var tmpSO = new SerializedObject(tmpComponent);
-                            var fontAssetProperty = tmpSO.FindProperty("m_fontAsset");
-                            if (fontAssetProperty != null)
-                            {
-                                fontAssetProperty.objectReferenceValue = defaultFont;
-                                tmpSO.ApplyModifiedProperties();
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         // Find ChatController and assign assets
