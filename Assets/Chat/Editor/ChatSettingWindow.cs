@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.IO;
 using System.Linq;
@@ -9,6 +7,8 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+
+#nullable enable
 
 public class ChatSettingWindow : EditorWindow
 {
@@ -60,7 +60,7 @@ public class ChatSettingWindow : EditorWindow
 
         // Description
         EditorGUILayout.LabelField("Description:");
-        description = EditorGUILayout.TextField(description, GUILayout.Height(60));
+        description = EditorGUILayout.TextArea(description, GUILayout.Height(60));
         EditorGUILayout.Space(5);
 
         // Character Sprite
@@ -326,6 +326,38 @@ public class ChatSettingWindow : EditorWindow
             );
 
             AssetDatabase.CreateAsset((UnityEngine.Object)fontAsset, assetPath);
+
+            // アトラステクスチャをサブアセットとして追加
+            var atlasTexturesField = tmpType.GetField("m_AtlasTextures",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (atlasTexturesField != null)
+            {
+                var atlasTextures = atlasTexturesField.GetValue(fontAsset) as Texture2D[];
+                if (atlasTextures != null)
+                {
+                    foreach (var texture in atlasTextures)
+                    {
+                        if (texture != null && !AssetDatabase.Contains(texture))
+                        {
+                            texture.name = $"{japaneseFont.name} Atlas";
+                            AssetDatabase.AddObjectToAsset(texture, assetPath);
+                        }
+                    }
+                }
+            }
+
+            // マテリアルをサブアセットとして追加
+            var materialProperty = tmpType.GetProperty("material");
+            if (materialProperty != null)
+            {
+                var material = materialProperty.GetValue(fontAsset) as Material;
+                if (material != null && !AssetDatabase.Contains(material))
+                {
+                    material.name = $"{japaneseFont.name} Material";
+                    AssetDatabase.AddObjectToAsset(material, assetPath);
+                }
+            }
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -431,7 +463,7 @@ public class ChatSettingWindow : EditorWindow
             AssetDatabase.CreateFolder("Assets/ChatAssets", "Prefabs");
         }
 
-        var prefabNames = new[] { "ChatNode", "ImageNode", "EndNode" };
+        var prefabNames = new[] { "ChatNode", "ImageNode", "EndNode", "ChoiceButton" };
 
         foreach (var prefabName in prefabNames)
         {
@@ -448,7 +480,7 @@ public class ChatSettingWindow : EditorWindow
             foreach (var guid in sourceGuids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
-                if (Path.GetFileNameWithoutExtension(path) == prefabName && path.StartsWith("Packages/"))
+                if (Path.GetFileNameWithoutExtension(path) == prefabName)
                 {
                     sourcePath = path;
                     break;
@@ -456,15 +488,26 @@ public class ChatSettingWindow : EditorWindow
             }
 
             // Fallback to direct package path
-            if (sourcePath == null)
-            {
-                sourcePath = $"Packages/jp.kuluna.lib.chattemplate/Prefabs/{prefabName}.prefab";
-            }
+            sourcePath ??= $"Packages/jp.kuluna.lib.chattemplate/Prefabs/{prefabName}.prefab";
 
             // Copy prefab
             if (File.Exists(sourcePath) || AssetDatabase.LoadAssetAtPath<GameObject>(sourcePath) != null)
             {
                 AssetDatabase.CopyAsset(sourcePath, destinationPath);
+
+                // 各プレバブにあるTextMeshProUGUIコンポーネントのフォントアセットをデフォルトに設定
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(destinationPath);
+                if (prefab != null)
+                {
+                    var texts = prefab.GetComponentsInChildren<TextMeshProUGUI>(true);
+                    foreach (var text in texts)
+                    {
+                        text.font = TMP_Settings.defaultFontAsset;
+                        EditorUtility.SetDirty(text);
+                    }
+
+                    EditorUtility.SetDirty(prefab);
+                }
             }
             else
             {
@@ -585,6 +628,16 @@ public class ChatSettingWindow : EditorWindow
 
         // Unpack prefab to make it independent
         PrefabUtility.UnpackPrefabInstance(chatInstance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
+
+        // Set Default Font asset for all TMP components in the chatInstance
+        var texts = chatInstance.GetComponentsInChildren<TextMeshProUGUI>(true);
+        if (texts != null)
+        {
+            foreach (var text in texts)
+            {
+                text.font = TMP_Settings.defaultFontAsset;
+            }
+        }
 
         // Find and configure Canvas
         var canvas = chatInstance.GetComponentInChildren<Canvas>();
