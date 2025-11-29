@@ -3,25 +3,28 @@ using UnityEditor;
 
 #nullable enable
 
-/// <summary>
-/// Editor拡張用の汎用ユーティリティ関数
-/// </summary>
-internal static class EditorUtilities
+namespace Template.Chat.Editor
 {
     /// <summary>
-    /// フォルダが存在しない場合は再帰的に作成
+    /// Editor拡張用の汎用ユーティリティ関数
     /// </summary>
-    public static void EnsureFolderExists(string folderPath)
+    internal static class EditorUtilities
     {
-        if (AssetDatabase.IsValidFolder(folderPath)) return;
-
-        var parent = Path.GetDirectoryName(folderPath)?.Replace("\\", "/");
-        var folderName = Path.GetFileName(folderPath);
-
-        if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
+        /// <summary>
+        /// フォルダが存在しない場合は再帰的に作成
+        /// </summary>
+        public static void EnsureFolderExists(string folderPath)
         {
-            EnsureFolderExists(parent);
+            if (AssetDatabase.IsValidFolder(folderPath)) return;
+
+            var parent = Path.GetDirectoryName(folderPath)?.Replace("\\", "/");
+            var folderName = Path.GetFileName(folderPath);
+
+            if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
+            {
+                EnsureFolderExists(parent);
+            }
+            AssetDatabase.CreateFolder(parent ?? "Assets", folderName);
         }
-        AssetDatabase.CreateFolder(parent ?? "Assets", folderName);
     }
 }

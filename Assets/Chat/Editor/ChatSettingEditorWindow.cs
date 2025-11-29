@@ -10,53 +10,56 @@ using UnityEngine.InputSystem.UI;
 
 #nullable enable
 
-/// <summary>
-/// Chat設定用のEditorWindow
-/// UI描画は ChatSettingEditorWindow+UI.cs
-/// アクションは ChatSettingEditorWindow+Actions.cs
-/// </summary>
-public partial class ChatSettingEditorWindow : EditorWindow
+namespace Template.Chat.Editor
 {
-    // Asset Settings
-    private string description = "";
-    private Sprite? characterSprite;
-    private Pictures? picturesAsset;
-    private TextAsset? scenarioText;
-
-    // TMP Font Settings
-    private Font? japaneseFont;
-
-    // UI State
-    private Vector2 scrollPosition;
-    private bool showValidation = false;
-    private ChatSetupValidator.ValidationResult[]? validationResults;
-
-    // Validators
-    private readonly ChatSetupValidator validator = new();
-
-    [MenuItem("Window/Chat/Settings")]
-    public static void ShowWindow()
+    /// <summary>
+    /// Chat設定用のEditorWindow
+    /// UI描画は ChatSettingEditorWindow+UI.cs
+    /// アクションは ChatSettingEditorWindow+Actions.cs
+    /// </summary>
+    public partial class ChatSettingEditorWindow : EditorWindow
     {
-        var window = GetWindow<ChatSettingEditorWindow>("Chat Settings");
-        window.minSize = new Vector2(400, 600);
-        window.Show();
-    }
+        // Asset Settings
+        private string description = "";
+        private Sprite? characterSprite;
+        private Pictures? picturesAsset;
+        private TextAsset? scenarioText;
 
-    private void OnGUI()
-    {
-        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+        // TMP Font Settings
+        private Font? japaneseFont;
 
-        DrawAssetsSection();
-        EditorGUILayout.Space(10);
+        // UI State
+        private Vector2 scrollPosition;
+        private bool showValidation = false;
+        private ChatSetupValidator.ValidationResult[]? validationResults;
 
-        DrawTMPSection();
-        EditorGUILayout.Space(10);
+        // Validators
+        private readonly ChatSetupValidator validator = new();
 
-        DrawValidationSection();
-        EditorGUILayout.Space(10);
+        [MenuItem("Window/Chat/Settings")]
+        public static void ShowWindow()
+        {
+            var window = GetWindow<ChatSettingEditorWindow>("Chat Settings");
+            window.minSize = new Vector2(400, 600);
+            window.Show();
+        }
 
-        DrawCreateGameSection();
+        private void OnGUI()
+        {
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-        EditorGUILayout.EndScrollView();
+            DrawAssetsSection();
+            EditorGUILayout.Space(10);
+
+            DrawTMPSection();
+            EditorGUILayout.Space(10);
+
+            DrawValidationSection();
+            EditorGUILayout.Space(10);
+
+            DrawCreateGameSection();
+
+            EditorGUILayout.EndScrollView();
+        }
     }
 }
