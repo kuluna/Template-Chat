@@ -11,7 +11,23 @@ namespace Template.Chat.Editor
         private void DrawAssetsSection()
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("チャットテンプレート", EditorStyles.boldLabel);
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField("チャットテンプレート", EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                // Update this Library
+                if (GUILayout.Button("バージョンアップを確認"))
+                {
+                    var updater = new PackageUpdater(
+                        onUpdate: () => Debug.Log("パッケージを更新中..."),
+                        onComplete: () => Debug.Log("更新処理が完了しました")
+                    );
+                    var currentVersion = updater.GetPackageVersion();
+                    updater.UpdatePackage();
+                }
+            }
+
             EditorGUILayout.Space(5);
 
             // Description
