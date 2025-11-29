@@ -11,15 +11,21 @@ namespace Template.Chat.Editor
 {
     internal static class EditorConstants
     {
+        // パッケージ情報
+        public const string PackageName = "jp.kuluna.lib.chattemplate";
+        public static readonly string PackagePath = $"Packages/{PackageName}/";
+        public static readonly string PackageRepository =
+            $"https://github.com/kuluna/Template-Chat.git?path=/Assets/Chat#feature/execute";
+
         // ユーザーアセットの出力先
         public const string ChatAssetsFolder = "Assets/ChatAssets";
         public const string ChatAssetsPrefabsFolder = "Assets/ChatAssets/Prefabs";
         public const string TMPFontsFolder = "Assets/TextMesh Pro/Fonts";
 
         // パッケージ内のプレハブパス
-        public const string PackagePrefabsPath = "Packages/jp.kuluna.lib.chattemplate/Prefabs";
+        public static readonly string PackagePrefabsPath = $"{PackagePath}Prefabs";
 
-        // 必要なプレハブ名
+        // コピーするプレハブ名
         public static readonly string[] RequiredPrefabNames =
             { "ChatNode", "ImageNode", "EndNode", "ChoiceButton" };
     }

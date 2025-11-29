@@ -25,16 +25,6 @@ namespace Template.Chat.Editor
         private static RemoveRequest? removeRequest;
         private static AddRequest? addRequest;
 
-        // パッケージのGitリポジトリURL
-        private const string PackageRepository =
-            "https://github.com/kuluna/Template-Chat.git?path=/Assets/Chat#main";
-
-        // パッケージ名（package.jsonのname）
-        private const string PackageName = "jp.kuluna.lib.chattemplate";
-
-        // パッケージのルートパス
-        private const string PackagePath = "Packages/jp.kuluna.lib.chattemplate/";
-
         public PackageUpdater(UnityAction? onUpdate = null, UnityAction? onComplete = null)
         {
             this.onUpdate = onUpdate;
@@ -46,7 +36,7 @@ namespace Template.Chat.Editor
         /// </summary>
         public string GetPackageVersion()
         {
-            var packageJsonPath = $"{PackagePath}package.json";
+            var packageJsonPath = $"{EditorConstants.PackagePath}package.json";
             var jsonContent = AssetDatabase.LoadAssetAtPath<TextAsset>(packageJsonPath)?.text;
 
             if (string.IsNullOrEmpty(jsonContent))
@@ -71,7 +61,7 @@ namespace Template.Chat.Editor
         public void UpdatePackage()
         {
             onUpdate?.Invoke();
-            removeRequest = Client.Remove(PackageName);
+            removeRequest = Client.Remove(EditorConstants.PackageName);
             EditorApplication.update += RemoveProgress;
         }
 
@@ -91,7 +81,7 @@ namespace Template.Chat.Editor
                 return;
             }
 
-            addRequest = Client.Add(PackageRepository);
+            addRequest = Client.Add(EditorConstants.PackageRepository);
             EditorApplication.update += AddProgress;
         }
 
