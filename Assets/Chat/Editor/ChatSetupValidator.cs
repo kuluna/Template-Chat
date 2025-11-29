@@ -38,38 +38,38 @@ namespace Template.Chat.Editor
 
             // Description チェック
             results.Add(string.IsNullOrWhiteSpace(description)
-                ? new("✗ Description is not set.", ValidationSeverity.Error)
-                : new("✓ Description is set.", ValidationSeverity.Success));
+                ? new("✗ ゲームのあらすじが入力されていません", ValidationSeverity.Error)
+                : new("✓ ゲームのあらすじが設定されています", ValidationSeverity.Success));
 
             // Character Sprite チェック
             results.Add(characterSprite == null
-                ? new("✗ Character Sprite is not set.", ValidationSeverity.Error)
-                : new("✓ Character Sprite is set.", ValidationSeverity.Success));
+                ? new("✗ キャラクター画像が設定されていません", ValidationSeverity.Error)
+                : new("✓ キャラクター画像が設定されています", ValidationSeverity.Success));
 
             // Pictures Asset チェック
             if (picturesAsset == null)
             {
-                results.Add(new("✗ Pictures Asset is not set.", ValidationSeverity.Error));
+                results.Add(new("✗ 画像リストが設定されていません", ValidationSeverity.Error));
             }
             else if (picturesAsset.pictures.Count == 0)
             {
-                results.Add(new("⚠ Pictures Asset has no sprites registered.", ValidationSeverity.Warning));
+                results.Add(new("⚠ 画像リストに画像が1枚も登録されていません", ValidationSeverity.Warning));
             }
             else
             {
-                results.Add(new($"✓ Pictures Asset has {picturesAsset.pictures.Count} sprite(s).", ValidationSeverity.Success));
+                results.Add(new($"✓ 画像リストに{picturesAsset.pictures.Count}枚の画像が登録されています", ValidationSeverity.Success));
             }
 
             // Scenario Text チェック
             results.Add(scenarioText == null
-                ? new("✗ Scenario Text is not set.", ValidationSeverity.Error)
-                : new("✓ Scenario Text is set.", ValidationSeverity.Success));
+                ? new("✗ シナリオテキストが設定されていません", ValidationSeverity.Error)
+                : new("✓ シナリオテキストが設定されています", ValidationSeverity.Success));
 
             // TMP チェック
             var tmpType = System.Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
             results.Add(tmpType == null
-                ? new("✗ TextMeshPro is not imported.", ValidationSeverity.Error)
-                : new("✓ TextMeshPro is imported.", ValidationSeverity.Success));
+                ? new("✗ TextMeshProがインポートされていません（テキスト表示に必要です）", ValidationSeverity.Error)
+                : new("✓ TextMeshProがインポートされています", ValidationSeverity.Success));
 
             return results.ToArray();
         }

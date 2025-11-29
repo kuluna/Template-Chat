@@ -11,17 +11,17 @@ namespace Template.Chat.Editor
         private void DrawAssetsSection()
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Game Assets", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("チャットテンプレート", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
 
             // Description
-            EditorGUILayout.LabelField("Description:");
+            EditorGUILayout.LabelField("あらすじ");
             description = EditorGUILayout.TextArea(description, GUILayout.Height(60));
             EditorGUILayout.Space(5);
 
             // Character Sprite
             characterSprite = (Sprite?)EditorGUILayout.ObjectField(
-                "Character Sprite",
+                "キャラクター画像",
                 characterSprite,
                 typeof(Sprite),
                 false
@@ -30,7 +30,7 @@ namespace Template.Chat.Editor
 
             // Pictures Asset
             picturesAsset = (Pictures?)EditorGUILayout.ObjectField(
-                "Pictures Asset",
+                "画像リスト",
                 picturesAsset,
                 typeof(Pictures),
                 false
@@ -38,7 +38,7 @@ namespace Template.Chat.Editor
 
             if (picturesAsset == null)
             {
-                if (GUILayout.Button("Create Pictures Asset"))
+                if (GUILayout.Button("画像リストを新規作成"))
                 {
                     CreatePicturesAsset();
                 }
@@ -47,7 +47,7 @@ namespace Template.Chat.Editor
             {
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.HelpBox(
-                    $"Registered Pictures: {picturesAsset.pictures.Count}",
+                    $"登録済みの画像: {picturesAsset.pictures.Count}枚",
                     MessageType.Info
                 );
 
@@ -62,7 +62,7 @@ namespace Template.Chat.Editor
 
             // Scenario Text
             scenarioText = (TextAsset?)EditorGUILayout.ObjectField(
-                "Scenario Text",
+                "シナリオテキスト",
                 scenarioText,
                 typeof(TextAsset),
                 false
@@ -70,7 +70,7 @@ namespace Template.Chat.Editor
 
             if (scenarioText == null)
             {
-                if (GUILayout.Button("Create Sample Scenario"))
+                if (GUILayout.Button("サンプルシナリオを作成"))
                 {
                     CreateSampleScenario();
                 }
@@ -82,7 +82,7 @@ namespace Template.Chat.Editor
         private void DrawTMPSection()
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("TextMeshPro Settings", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("テキスト表示の設定（TextMeshPro）", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
 
             // Check if TMP is imported
@@ -90,28 +90,29 @@ namespace Template.Chat.Editor
             if (tmpType == null)
             {
                 EditorGUILayout.HelpBox(
-                    "TextMeshPro is not imported. Please import TMP Essential Resources from:\n" +
+                    "TextMeshProがインポートされていません。\n" +
+                    "以下のメニューからインポートしてください:\n" +
                     "Window > TextMeshPro > Import TMP Essential Resources",
                     MessageType.Warning
                 );
             }
             else
             {
-                EditorGUILayout.HelpBox("TextMeshPro is imported.", MessageType.Info);
+                EditorGUILayout.HelpBox("TextMeshProはインポート済みです ✓", MessageType.Info);
 
                 // Japanese Font Import Section
                 EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Import Japanese Font", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("日本語フォントの設定", EditorStyles.boldLabel);
 
                 japaneseFont = (Font?)EditorGUILayout.ObjectField(
-                    "TrueType Font",
+                    "フォントファイル（.ttf/.otf）",
                     japaneseFont,
                     typeof(Font),
                     false
                 );
 
                 EditorGUI.BeginDisabledGroup(japaneseFont == null);
-                if (GUILayout.Button("Create TMP Font Asset"))
+                if (GUILayout.Button("TMPフォントアセットを作成"))
                 {
                     CreateTMPFontAsset();
                 }
@@ -131,10 +132,10 @@ namespace Template.Chat.Editor
         private void DrawValidationSection()
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Validation", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("設定チェック", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
 
-            if (GUILayout.Button("Validate Setup"))
+            if (GUILayout.Button("設定内容を確認する"))
             {
                 validationResults = validator.Validate(description, characterSprite, picturesAsset, scenarioText);
                 showValidation = true;
@@ -160,10 +161,6 @@ namespace Template.Chat.Editor
 
         private void DrawCreateGameSection()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Create Game", EditorStyles.boldLabel);
-            EditorGUILayout.Space(5);
-
             bool canCreate = !string.IsNullOrWhiteSpace(description) &&
                              characterSprite != null &&
                              picturesAsset != null &&
@@ -173,23 +170,21 @@ namespace Template.Chat.Editor
             {
                 EditorGUILayout.HelpBox(
                     "すべての必須項目を設定してください:\n" +
-                    "- Description\n" +
-                    "- Character Sprite\n" +
-                    "- Pictures Asset\n" +
-                    "- Scenario Text",
+                    "- ゲームの説明文\n" +
+                    "- キャラクター画像\n" +
+                    "- 画像アセット\n" +
+                    "- シナリオテキスト",
                     MessageType.Warning
                 );
             }
 
             EditorGUI.BeginDisabledGroup(!canCreate);
-            if (GUILayout.Button("Create Chat Game", GUILayout.Height(40)))
+            if (GUILayout.Button("ゲームを作成する", GUILayout.Height(40)))
             {
                 // Delay call to avoid GUI layout errors
                 EditorApplication.delayCall += CreateChatScene;
             }
             EditorGUI.EndDisabledGroup();
-
-            EditorGUILayout.EndVertical();
         }
     }
 }

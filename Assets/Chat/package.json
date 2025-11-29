@@ -1,6 +1,6 @@
 {
     "name": "jp.kuluna.lib.chattemplate",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "displayName": "Template-Chat",
     "description": "Easy chat template",
     "dependencies": {
