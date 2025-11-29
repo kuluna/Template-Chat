@@ -4,90 +4,93 @@ using UnityEngine.UI;
 
 #nullable enable
 
-public partial class ChatController : MonoBehaviour
+namespace Template.Chat
 {
-    [Header("Data")]
-    [TextArea]
-    [SerializeField] private string description = "";
-    [SerializeField] private Pictures? pictures;
-    [SerializeField] private TextAsset? scenarioText;
-    [SerializeField] private Sprite? defaultIcon;
-
-    [Header("Chat UI Elements")]
-    [SerializeField] private ChatNode chatNodePrefab = null!;
-    [SerializeField] private ChatNode imageNodePrefab = null!;
-    [SerializeField] private RectTransform endNodePrefab = null!;
-    [Space]
-    [SerializeField] private ScrollRect chatScrollView = null!;
-    [SerializeField] private Transform chatContentTransform = null!;
-    [SerializeField] private ChatChoiceDialog choiceDialog = null!;
-    [SerializeField] private ImageViewer imageViewer = null!;
-    [SerializeField] private DescriptionPanel descriptionPanel = null!;
-
-    private readonly ChatEventPresenter presenter = new();
-    private ChoiceChatCommand? currentChoiceCommand;
-
-    private void Awake()
+    public partial class ChatController : MonoBehaviour
     {
-        if (pictures == null)
-        {
-            Debug.LogError("画像アセットが設定されていません。");
-        }
-        if (scenarioText == null)
-        {
-            Debug.LogError("シナリオテキストが設定されていません。");
-        }
-    }
+        [Header("Data")]
+        [TextArea]
+        [SerializeField] private string description = "";
+        [SerializeField] private Pictures? pictures;
+        [SerializeField] private TextAsset? scenarioText;
+        [SerializeField] private Sprite? defaultIcon;
 
-    private async void Start()
-    {
-        foreach (Transform obj in chatContentTransform)
+        [Header("Chat UI Elements")]
+        [SerializeField] private ChatNode chatNodePrefab = null!;
+        [SerializeField] private ChatNode imageNodePrefab = null!;
+        [SerializeField] private RectTransform endNodePrefab = null!;
+        [Space]
+        [SerializeField] private ScrollRect chatScrollView = null!;
+        [SerializeField] private Transform chatContentTransform = null!;
+        [SerializeField] private ChatChoiceDialog choiceDialog = null!;
+        [SerializeField] private ImageViewer imageViewer = null!;
+        [SerializeField] private DescriptionPanel descriptionPanel = null!;
+
+        private readonly ChatEventPresenter presenter = new();
+        private ChoiceChatCommand? currentChoiceCommand;
+
+        private void Awake()
         {
-            Destroy(obj.gameObject);
+            if (pictures == null)
+            {
+                Debug.LogError("画像アセットが設定されていません。");
+            }
+            if (scenarioText == null)
+            {
+                Debug.LogError("シナリオテキストが設定されていません。");
+            }
         }
 
-        if (!string.IsNullOrEmpty(description))
+        private async void Start()
+        {
+            foreach (Transform obj in chatContentTransform)
+            {
+                Destroy(obj.gameObject);
+            }
+
+            if (!string.IsNullOrEmpty(description))
+            {
+                descriptionPanel.Show(description);
+            }
+
+            if (scenarioText != null)
+            {
+                presenter.Listener = this;
+                presenter.Setup(scenarioText!.text);
+
+                await Awaitable.WaitForSecondsAsync(1);
+                await presenter.Next();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            presenter.Listener = null;
+        }
+
+        ///////// Callbacks ///////// 
+
+        public void OnClickCharacter()
         {
             descriptionPanel.Show(description);
         }
 
-        if (scenarioText != null)
+        public void ShowOnImageViewer(Sprite sprite)
         {
-            presenter.Listener = this;
-            presenter.Setup(scenarioText!.text);
-
-            await Awaitable.WaitForSecondsAsync(1);
-            await presenter.Next();
+            imageViewer.Show(sprite);
         }
-    }
 
-    private void OnDestroy()
-    {
-        presenter.Listener = null;
-    }
-
-    ///////// Callbacks ///////// 
-
-    public void OnClickCharacter()
-    {
-        descriptionPanel.Show(description);
-    }
-
-    public void ShowOnImageViewer(Sprite sprite)
-    {
-        imageViewer.Show(sprite);
-    }
-
-    public void OnClickSelectChoice(string choiceText)
-    {
-        if (currentChoiceCommand != null)
+        public void OnClickSelectChoice(string choiceText)
         {
-            // 選択結果を変数に保存
-            presenter.SetVariable(currentChoiceCommand.VariableName, choiceText);
-            currentChoiceCommand = null;
+            if (currentChoiceCommand != null)
+            {
+                // 選択結果を変数に保存
+                presenter.SetVariable(currentChoiceCommand.VariableName, choiceText);
+                currentChoiceCommand = null;
 
-            // 次のコマンドへ進む
-            _ = presenter.Next();
+                // 次のコマンドへ進む
+                _ = presenter.Next();
+            }
         }
     }
 }

@@ -3,27 +3,30 @@ using UnityEngine;
 
 #nullable enable
 
-public class DescriptionPanel : MonoBehaviour
+namespace Template.Chat
 {
-    [SerializeField] private GameObject panel = null!;
-    [SerializeField] private TextMeshProUGUI descriptionText = null!;
-
-    public void Show(string text)
+    public class DescriptionPanel : MonoBehaviour
     {
-        descriptionText.text = text;
-        panel.SetActive(true);
+        [SerializeField] private GameObject panel = null!;
+        [SerializeField] private TextMeshProUGUI descriptionText = null!;
 
-        Time.timeScale = 0f;
-    }
+        public void Show(string text)
+        {
+            descriptionText.text = text;
+            panel.SetActive(true);
 
-    public void Hide()
-    {
-        panel.SetActive(false);
-        Time.timeScale = 1f;
-    }
+            Time.timeScale = 0f;
+        }
 
-    public void SetText(string text)
-    {
-        descriptionText.text = text;
+        public void Hide()
+        {
+            panel.SetActive(false);
+            Time.timeScale = 1f;
+        }
+
+        public void SetText(string text)
+        {
+            descriptionText.text = text;
+        }
     }
 }

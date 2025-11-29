@@ -6,85 +6,75 @@ using UnityEngine;
 
 #nullable enable
 
-/*
-Specs
-
-
-
-
-
-
-
-
-
-*/
-
-public class ChatParser
+namespace Template.Chat
 {
-    public string RawText { get; private set; } = string.Empty;
-    public List<IChatCommand> Commands { get; } = new();
-    public int CommandIndex { get; set; } = 0;
-
-    private string[] lines = new string[0];
-
-    public void Parse(string rawText)
+    public class ChatParser
     {
-        Commands.Clear();
-        CommandIndex = 0;
-        RawText = rawText;
+        public string RawText { get; private set; } = string.Empty;
+        public List<IChatCommand> Commands { get; } = new();
+        public int CommandIndex { get; set; } = 0;
 
-        lines = RawText.Split('\n');
-        for (var i = 0; i < lines.Length; i++)
+        private string[] lines = new string[0];
+
+        public void Parse(string rawText)
         {
-            var line = lines[i].Trim();
-            if (string.IsNullOrEmpty(line)) continue;
-            if (line.StartsWith("#")) continue; // Skip comments
+            Commands.Clear();
+            CommandIndex = 0;
+            RawText = rawText;
 
-            var command = ParseLine(line, i);
-            Commands.Add(command);
+            lines = RawText.Split('\n');
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+                if (line.StartsWith("#")) continue; // Skip comments
+
+                var command = ParseLine(line, i);
+                Commands.Add(command);
+            }
         }
-    }
 
-    private IChatCommand ParseLine(string line, int index)
-    {
-        var args = line.Split(',');
-        return args[0] switch
+        private IChatCommand ParseLine(string line, int index)
         {
-            "@text" => new TextChatCommand(index, args),
-            "@image" => new ImageChatCommand(index, args),
-            "@choice" => new ChoiceChatCommand(index, args),
-            "@if" => new IfChatCommand(index, args),
-            "@label" => new LabelChatCommand(index, args),
-            "@wait" => new WaitChatCommand(index, args),
-            "@goto" => new GotoChatCommand(index, args),
-            _ => new UnknownChatCommand(index, args),
-        };
-    }
+            var args = line.Split(',');
+            return args[0] switch
+            {
+                "@text" => new TextChatCommand(index, args),
+                "@image" => new ImageChatCommand(index, args),
+                "@choice" => new ChoiceChatCommand(index, args),
+                "@if" => new IfChatCommand(index, args),
+                "@label" => new LabelChatCommand(index, args),
+                "@wait" => new WaitChatCommand(index, args),
+                "@goto" => new GotoChatCommand(index, args),
+                _ => new UnknownChatCommand(index, args),
+            };
+        }
 
-    public List<IChatCommand> NextCommands()
-    {
-        var next = new List<IChatCommand>();
-        var BREAK_COMMANDS = new CommandType[]
+        public List<IChatCommand> NextCommands()
         {
+            var next = new List<IChatCommand>();
+            var BREAK_COMMANDS = new CommandType[]
+            {
             CommandType.Text,
             CommandType.Choice,
             CommandType.If,
             CommandType.Wait,
             CommandType.Goto
-        };
+            };
 
-        while (CommandIndex < Commands.Count)
-        {
-            var command = Commands[CommandIndex];
-            next.Add(command);
-            CommandIndex += 1;
-
-            if (BREAK_COMMANDS.Contains(command.Type))
+            while (CommandIndex < Commands.Count)
             {
-                break;
-            }
-        }
+                var command = Commands[CommandIndex];
+                next.Add(command);
+                CommandIndex += 1;
 
-        return next;
+                if (BREAK_COMMANDS.Contains(command.Type))
+                {
+                    break;
+                }
+            }
+
+            return next;
+        }
     }
 }

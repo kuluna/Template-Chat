@@ -3,15 +3,18 @@ using UnityEngine;
 
 #nullable enable
 
-[CreateAssetMenu(fileName = "Pictures", menuName = "Chat/Pictures")]
-public class Pictures : ScriptableObject
+namespace Template.Chat
 {
-    public List<Picture> pictures = new();
-
-    [System.Serializable]
-    public class Picture
+    [CreateAssetMenu(fileName = "Pictures", menuName = "Chat/Pictures")]
+    public class Pictures : ScriptableObject
     {
-        public string pictureName = string.Empty;
-        public Sprite sprite = null!;
+        public List<Picture> pictures = new();
+
+        [System.Serializable]
+        public class Picture
+        {
+            public string pictureName = string.Empty;
+            public Sprite sprite = null!;
+        }
     }
 }

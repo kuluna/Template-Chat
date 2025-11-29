@@ -6,184 +6,187 @@ using UnityEngine;
 
 #nullable enable
 
-public class ChatEventPresenter
+namespace Template.Chat
 {
-    public IChatEventListener? Listener { private get; set; }
-    public bool CanMoveToNext => nextCallDepth.Value <= 0;
-
-    private readonly ChatParser parser = new();
-    private readonly AsyncLocal<int> nextCallDepth = new();
-    private readonly Dictionary<string, int> labelIndexMap = new();
-    private readonly Dictionary<string, string> variables = new();
-
-    public void Setup(string rawChatText)
+    public class ChatEventPresenter
     {
-        parser.Parse(rawChatText);
-        if (parser.Commands.Count == 0)
-        {
-            Debug.LogWarning("No chat nodes parsed from the provided text.");
-        }
+        public IChatEventListener? Listener { private get; set; }
+        public bool CanMoveToNext => nextCallDepth.Value <= 0;
 
-        // ラベルのインデックスをマッピング（最初に見つかったラベルを優先）
-        labelIndexMap.Clear();
-        for (int i = 0; i < parser.Commands.Count; i++)
+        private readonly ChatParser parser = new();
+        private readonly AsyncLocal<int> nextCallDepth = new();
+        private readonly Dictionary<string, int> labelIndexMap = new();
+        private readonly Dictionary<string, string> variables = new();
+
+        public void Setup(string rawChatText)
         {
-            if (parser.Commands[i] is LabelChatCommand labelCommand)
+            parser.Parse(rawChatText);
+            if (parser.Commands.Count == 0)
             {
-                if (!labelIndexMap.ContainsKey(labelCommand.LabelName))
+                Debug.LogWarning("No chat nodes parsed from the provided text.");
+            }
+
+            // ラベルのインデックスをマッピング（最初に見つかったラベルを優先）
+            labelIndexMap.Clear();
+            for (int i = 0; i < parser.Commands.Count; i++)
+            {
+                if (parser.Commands[i] is LabelChatCommand labelCommand)
                 {
-                    labelIndexMap[labelCommand.LabelName] = i;
+                    if (!labelIndexMap.ContainsKey(labelCommand.LabelName))
+                    {
+                        labelIndexMap[labelCommand.LabelName] = i;
+                    }
                 }
             }
+
+            // 変数をクリア
+            variables.Clear();
+            nextCallDepth.Value = 0;
         }
 
-        // 変数をクリア
-        variables.Clear();
-        nextCallDepth.Value = 0;
-    }
 
+        public async Awaitable Next()
+        {
+            if (Listener == null) return;
+            nextCallDepth.Value += 1;
 
-    public async Awaitable Next()
-    {
-        if (Listener == null) return;
-        nextCallDepth.Value += 1;
-
-        var STOP_COMMANDS = new HashSet<CommandType>
+            var STOP_COMMANDS = new HashSet<CommandType>
         {
             CommandType.Choice
         };
 
-        IChatCommand lastCommand;
-        do
-        {
-            var commands = parser.NextCommands();
-            if (commands.Count == 0)
+            IChatCommand lastCommand;
+            do
             {
-                nextCallDepth.Value = 0;
-                await Listener.OnEndChat();
-                return;
-            }
-
-            // コマンドを全て並列で実行
-            var tasks = commands.Select(ExecuteCommand).ToList();
-            await AwaitAll(tasks);
-
-            lastCommand = commands.Last();
-        } while (!STOP_COMMANDS.Contains(lastCommand.Type));
-
-        nextCallDepth.Value -= 1;
-    }
-
-    /// <summary>
-    /// 複数のAwaitableを並列で実行し、全ての完了を待つ
-    /// </summary>
-    private static async Awaitable AwaitAll(List<Awaitable> tasks)
-    {
-        var completionFlags = new bool[tasks.Count];
-        var anyPending = true;
-
-        while (anyPending)
-        {
-            anyPending = false;
-            for (int i = 0; i < tasks.Count; i++)
-            {
-                if (!completionFlags[i])
+                var commands = parser.NextCommands();
+                if (commands.Count == 0)
                 {
-                    if (tasks[i].IsCompleted)
+                    nextCallDepth.Value = 0;
+                    await Listener.OnEndChat();
+                    return;
+                }
+
+                // コマンドを全て並列で実行
+                var tasks = commands.Select(ExecuteCommand).ToList();
+                await AwaitAll(tasks);
+
+                lastCommand = commands.Last();
+            } while (!STOP_COMMANDS.Contains(lastCommand.Type));
+
+            nextCallDepth.Value -= 1;
+        }
+
+        /// <summary>
+        /// 複数のAwaitableを並列で実行し、全ての完了を待つ
+        /// </summary>
+        private static async Awaitable AwaitAll(List<Awaitable> tasks)
+        {
+            var completionFlags = new bool[tasks.Count];
+            var anyPending = true;
+
+            while (anyPending)
+            {
+                anyPending = false;
+                for (int i = 0; i < tasks.Count; i++)
+                {
+                    if (!completionFlags[i])
                     {
-                        completionFlags[i] = true;
+                        if (tasks[i].IsCompleted)
+                        {
+                            completionFlags[i] = true;
+                        }
+                        else
+                        {
+                            anyPending = true;
+                        }
+                    }
+                }
+
+                if (anyPending)
+                {
+                    await Awaitable.NextFrameAsync();
+                }
+            }
+        }
+
+        public async Awaitable ExecuteCommand(IChatCommand command)
+        {
+            if (Listener == null) return;
+            switch (command)
+            {
+                case TextChatCommand textCommand:
+                    await Listener.ShowText(textCommand);
+                    // 連投でもデフォルトの待ちを作る
+                    await Awaitable.WaitForSecondsAsync(0.5f);
+                    break;
+
+                case ImageChatCommand imageCommand:
+                    await Listener.ShowImage(imageCommand);
+                    await Awaitable.WaitForSecondsAsync(0.5f);
+                    break;
+
+                case WaitChatCommand waitCommand:
+                    await Awaitable.WaitForSecondsAsync(waitCommand.Seconds);
+                    break;
+
+                case ChoiceChatCommand choiceCommand:
+                    Listener.ShowChoice(choiceCommand);
+                    break;
+
+                case IfChatCommand ifCommand:
+                    if (variables.TryGetValue(ifCommand.VariableName, out var actualValue))
+                    {
+                        if (ifCommand.Evaluate(actualValue))
+                        {
+                            JumpToLabel(ifCommand.GotoLabel);
+                        }
                     }
                     else
                     {
-                        anyPending = true;
+                        Debug.LogWarning($"Variable '{ifCommand.VariableName}' not found. Condition evaluates to false.");
                     }
-                }
+                    break;
+
+                case GotoChatCommand gotoCommand:
+                    JumpToLabel(gotoCommand.GotoLabel);
+                    break;
+
+                case LabelChatCommand:
+                    // ラベル自体は何もしない
+                    break;
+
+                default:
+                    Debug.LogWarning($"Unknown command type: {command.Type} at Line {command.Index}");
+                    break;
             }
 
-            if (anyPending)
+            // Implement command execution logic here.
+            await Task.CompletedTask;
+        }
+
+        private void JumpToLabel(string labelName)
+        {
+            if (labelIndexMap.TryGetValue(labelName, out int index))
             {
-                await Awaitable.NextFrameAsync();
+                parser.CommandIndex = index;
+            }
+            else
+            {
+                Debug.LogError($"Label '{labelName}' not found. Cannot jump.");
             }
         }
-    }
 
-    public async Awaitable ExecuteCommand(IChatCommand command)
-    {
-        if (Listener == null) return;
-        switch (command)
+        public void SetVariable(string variableName, string value)
         {
-            case TextChatCommand textCommand:
-                await Listener.ShowText(textCommand);
-                // 連投でもデフォルトの待ちを作る
-                await Awaitable.WaitForSecondsAsync(0.5f);
-                break;
-
-            case ImageChatCommand imageCommand:
-                await Listener.ShowImage(imageCommand);
-                await Awaitable.WaitForSecondsAsync(0.5f);
-                break;
-
-            case WaitChatCommand waitCommand:
-                await Awaitable.WaitForSecondsAsync(waitCommand.Seconds);
-                break;
-
-            case ChoiceChatCommand choiceCommand:
-                Listener.ShowChoice(choiceCommand);
-                break;
-
-            case IfChatCommand ifCommand:
-                if (variables.TryGetValue(ifCommand.VariableName, out var actualValue))
-                {
-                    if (ifCommand.Evaluate(actualValue))
-                    {
-                        JumpToLabel(ifCommand.GotoLabel);
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"Variable '{ifCommand.VariableName}' not found. Condition evaluates to false.");
-                }
-                break;
-
-            case GotoChatCommand gotoCommand:
-                JumpToLabel(gotoCommand.GotoLabel);
-                break;
-
-            case LabelChatCommand:
-                // ラベル自体は何もしない
-                break;
-
-            default:
-                Debug.LogWarning($"Unknown command type: {command.Type} at Line {command.Index}");
-                break;
+            variables[variableName] = value;
         }
 
-        // Implement command execution logic here.
-        await Task.CompletedTask;
-    }
-
-    private void JumpToLabel(string labelName)
-    {
-        if (labelIndexMap.TryGetValue(labelName, out int index))
+        public interface IChatEventListener
         {
-            parser.CommandIndex = index;
+            public Awaitable ShowImage(ImageChatCommand command);
+            public Awaitable ShowText(TextChatCommand command);
+            public void ShowChoice(ChoiceChatCommand command);
+            public Awaitable OnEndChat();
         }
-        else
-        {
-            Debug.LogError($"Label '{labelName}' not found. Cannot jump.");
-        }
-    }
-
-    public void SetVariable(string variableName, string value)
-    {
-        variables[variableName] = value;
-    }
-
-    public interface IChatEventListener
-    {
-        public Awaitable ShowImage(ImageChatCommand command);
-        public Awaitable ShowText(TextChatCommand command);
-        public void ShowChoice(ChoiceChatCommand command);
-        public Awaitable OnEndChat();
     }
 }

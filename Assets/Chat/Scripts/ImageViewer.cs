@@ -3,25 +3,28 @@ using UnityEngine.UI;
 
 #nullable enable
 
-public class ImageViewer : MonoBehaviour
+namespace Template.Chat
 {
-    [SerializeField] private GameObject backgroundPanel = null!;
-    [SerializeField] private Image displayImage = null!;
-
-    private void Awake()
+    public class ImageViewer : MonoBehaviour
     {
-        backgroundPanel.SetActive(false);
-    }
+        [SerializeField] private GameObject backgroundPanel = null!;
+        [SerializeField] private Image displayImage = null!;
 
-    public void Show(Sprite sprite)
-    {
-        displayImage.sprite = sprite;
-        backgroundPanel.SetActive(true);
-    }
+        private void Awake()
+        {
+            backgroundPanel.SetActive(false);
+        }
 
-    public void Hide()
-    {
-        backgroundPanel.SetActive(false);
-        displayImage.sprite = null;
+        public void Show(Sprite sprite)
+        {
+            displayImage.sprite = sprite;
+            backgroundPanel.SetActive(true);
+        }
+
+        public void Hide()
+        {
+            backgroundPanel.SetActive(false);
+            displayImage.sprite = null;
+        }
     }
 }

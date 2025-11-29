@@ -1,5 +1,5 @@
 {
-    "name": "Chat.Editor",
+    "name": "Template.Chat.Editor",
     "rootNamespace": "",
     "references": [
         "GUID:ed3e720a1839948908fc58f8e837d51b",
