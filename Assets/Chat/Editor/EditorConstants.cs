@@ -15,7 +15,7 @@ namespace Template.Chat.Editor
         public const string PackageName = "jp.kuluna.lib.chattemplate";
         public static readonly string PackagePath = $"Packages/{PackageName}/";
         public static readonly string PackageRepository =
-            $"https://github.com/kuluna/Template-Chat.git?path=/Assets/Chat#feature/execute";
+            $"https://github.com/kuluna/Template-Chat.git?path=/Assets/Chat#main";
 
         // ユーザーアセットの出力先
         public const string ChatAssetsFolder = "Assets/ChatAssets";

@@ -39,7 +39,7 @@ namespace Template.Chat.Editor
         [MenuItem("Window/Chat/Settings")]
         public static void ShowWindow()
         {
-            var window = GetWindow<ChatSettingEditorWindow>("Chat Settings");
+            var window = GetWindow<ChatSettingEditorWindow>("Chat Template");
             window.minSize = new Vector2(400, 600);
             window.Show();
         }

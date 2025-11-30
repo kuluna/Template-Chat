@@ -7,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
 
 #nullable enable
 
@@ -151,6 +152,25 @@ namespace Template.Chat.Editor
                 canvas.worldCamera = camera;
             }
 
+            // TitleImageにcharacterSpriteを適用
+            var titleImageTransform = chatInstance.transform.Find("Canvas/TitleImage");
+            if (titleImageTransform != null)
+            {
+                var titleImage = titleImageTransform.GetComponent<Image>();
+                if (titleImage != null)
+                {
+                    titleImage.sprite = characterSprite;
+                }
+                else
+                {
+                    Debug.LogWarning("Image component not found on TitleImage.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("TitleImage not found in Chat prefab hierarchy.");
+            }
+
             return chatInstance;
         }
 
@@ -228,6 +248,30 @@ namespace Template.Chat.Editor
                             text.font = TMP_Settings.defaultFontAsset;
                             EditorUtility.SetDirty(text);
                         }
+
+                        // ImageNodeの場合、Bubble/ImageにcharacterSpriteを適用
+                        if (prefabName == "ImageNode")
+                        {
+                            var bubbleImageTransform = prefab.transform.Find("Bubble/Image");
+                            if (bubbleImageTransform != null)
+                            {
+                                var bubbleImage = bubbleImageTransform.GetComponent<Image>();
+                                if (bubbleImage != null)
+                                {
+                                    bubbleImage.sprite = characterSprite;
+                                    EditorUtility.SetDirty(bubbleImage);
+                                }
+                                else
+                                {
+                                    Debug.LogWarning("Image component not found on ImageNode's Bubble/Image.");
+                                }
+                            }
+                            else
+                            {
+                                Debug.LogWarning("Bubble/Image not found in ImageNode prefab.");
+                            }
+                        }
+
                         EditorUtility.SetDirty(prefab);
                     }
                 }

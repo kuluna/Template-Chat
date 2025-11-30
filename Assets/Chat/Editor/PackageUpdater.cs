@@ -98,10 +98,6 @@ namespace Template.Chat.Editor
             {
                 Debug.LogError($"パッケージの追加に失敗しました: {addRequest.Error?.message}");
             }
-            else
-            {
-                Debug.Log("パッケージの更新が完了しました");
-            }
 
             onComplete?.Invoke();
         }
