@@ -1,0 +1,32 @@
+@text, テストだよ！
+@wait, 2
+@text, ねぇ、聞いてる？
+@image, character
+@wait, 1
+
+# 分岐サンプル: Goto と Choice の使用例
+@text, 質問があります。あなたは猫派？犬派？
+@choice, animal_type, 猫派, 犬派, どちらでもない
+
+# 選択結果による分岐
+@if, animal_type, 猫派, Branch_Cat
+@if, animal_type, 犬派, Branch_Dog
+@if, animal_type, どちらでもない, Branch_Neither
+
+# 猫派の分岐
+@label, Branch_Cat
+@text, 猫派なんですね！猫は可愛いですよね。
+@goto, End
+
+# 犬派の分岐
+@label, Branch_Dog
+@text, 犬派なんですね！犬は忠実で素晴らしいですね。
+@goto, End
+
+# どちらでもない分岐
+@label, Branch_Neither
+@text, そうなんですね。どちらも魅力的ですからね！
+@goto, End
+
+@label, End
+@text, またお話しましょう！

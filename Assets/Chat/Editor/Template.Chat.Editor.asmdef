@@ -1,0 +1,18 @@
+{
+    "name": "Template.Chat.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:ed3e720a1839948908fc58f8e837d51b",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

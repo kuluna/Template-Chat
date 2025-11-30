@@ -1,0 +1,13 @@
+{
+    "name": "jp.kuluna.lib.chattemplate",
+    "version": "1.0.0",
+    "displayName": "Template-Chat",
+    "description": "Easy chat template",
+    "dependencies": {
+        "com.unity.2d.sprite": "^1.0.0",
+        "com.unity.inputsystem": "^1.0.0"
+    },
+    "author": {
+        "name": "kuluna"
+    }
+}
