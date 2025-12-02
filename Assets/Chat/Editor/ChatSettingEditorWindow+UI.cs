@@ -101,46 +101,59 @@ namespace Template.Chat.Editor
             EditorGUILayout.LabelField("テキスト表示の設定（TextMeshPro）", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
 
-            // Check if TMP is imported
-            var tmpType = Type.GetType("TMPro.TextMeshProUGUI, Unity.TextMeshPro");
-            if (tmpType == null)
+            // Check if TMP Essential Resources are imported
+            var tmpResourcesExists = System.IO.File.Exists("Assets/TextMesh Pro/Resources/TMP Settings.asset");
+
+            // TMP Import Button
+            EditorGUI.BeginDisabledGroup(tmpResourcesExists);
+            if (GUILayout.Button(tmpResourcesExists ? "TextMeshPro インポート済み ✓" : "TextMeshPro Essential Resourcesをインポート"))
             {
-                EditorGUILayout.HelpBox(
-                    "TextMeshProがインポートされていません。\n" +
-                    "以下のメニューからインポートしてください:\n" +
-                    "Window > TextMeshPro > Import TMP Essential Resources",
-                    MessageType.Warning
-                );
+                ImportTMPEssentialResources();
             }
-            else
+            EditorGUI.EndDisabledGroup();
+
+            if (!tmpResourcesExists)
             {
-                EditorGUILayout.HelpBox("TextMeshProはインポート済みです ✓", MessageType.Info);
-
-                // Japanese Font Import Section
-                EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("日本語フォントの設定", EditorStyles.boldLabel);
-
-                japaneseFont = (Font?)EditorGUILayout.ObjectField(
-                    "フォントファイル（.ttf/.otf）",
-                    japaneseFont,
-                    typeof(Font),
-                    false
-                );
-
-                EditorGUI.BeginDisabledGroup(japaneseFont == null);
-                if (GUILayout.Button("TMPフォントアセットを作成"))
-                {
-                    CreateTMPFontAsset();
-                }
-                EditorGUI.EndDisabledGroup();
-
-                EditorGUILayout.Space(5);
                 EditorGUILayout.HelpBox(
-                    "推奨日本語フォント: Noto Sans JP\n" +
-                    "Google Fontsから無料でダウンロード可能です。",
+                    "まず上のボタンでTextMeshProリソースをインポートしてください。",
                     MessageType.Info
                 );
             }
+
+            EditorGUILayout.Space(5);
+
+            // Japanese Font Import Section
+            EditorGUILayout.LabelField("日本語フォントの設定", EditorStyles.boldLabel);
+
+            japaneseFont = (Font?)EditorGUILayout.ObjectField(
+                "フォントファイル（.ttf/.otf）",
+                japaneseFont,
+                typeof(Font),
+                false
+            );
+
+            EditorGUI.BeginDisabledGroup(japaneseFont == null || !tmpResourcesExists);
+            if (GUILayout.Button("TMPフォントアセットを作成"))
+            {
+                CreateTMPFontAsset();
+            }
+            EditorGUI.EndDisabledGroup();
+
+            if (!tmpResourcesExists && japaneseFont != null)
+            {
+                EditorGUILayout.HelpBox(
+                    "TMPフォントアセットを作成するには、先にTextMeshProをインポートしてください。",
+                    MessageType.Warning
+                );
+            }
+
+            EditorGUILayout.Space(5);
+
+            EditorGUILayout.HelpBox(
+                "推奨日本語フォント: Noto Sans JP\n" +
+                "Google Fontsから無料でダウンロード可能です。",
+                MessageType.Info
+            );
 
             EditorGUILayout.EndVertical();
         }

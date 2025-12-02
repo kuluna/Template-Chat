@@ -1,3 +1,4 @@
+using System;
 using UnityEditor;
 
 #nullable enable
@@ -14,6 +15,35 @@ namespace Template.Chat.Editor
         private void CreateSampleScenario()
         {
             scenarioText = ChatAssetFactory.CreateSampleScenario();
+        }
+
+        private void ImportTMPEssentialResources()
+        {
+            var tmpImporterType = Type.GetType("TMPro.EditorUtilities.TMP_PackageResourceImporter, Unity.TextMeshPro.Editor");
+            if (tmpImporterType != null)
+            {
+                var importMethod = tmpImporterType.GetMethod("ImportProjectResourcesMenu",
+                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+                importMethod?.Invoke(null, null);
+
+                EditorApplication.delayCall += () =>
+                {
+                    EditorUtility.DisplayDialog(
+                        "インポート完了",
+                        "TextMeshPro Essential Resourcesのインポートが完了しました。",
+                        "OK"
+                    );
+                };
+            }
+            else
+            {
+                EditorUtility.DisplayDialog(
+                    "エラー",
+                    "TextMeshProのインポーターが見つかりませんでした。\n" +
+                    "Package ManagerからTextMeshProパッケージをインストールしてください。",
+                    "OK"
+                );
+            }
         }
 
         private void CreateTMPFontAsset()
