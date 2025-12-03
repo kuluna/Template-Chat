@@ -19,31 +19,20 @@ namespace Template.Chat.Editor
 
         private void ImportTMPEssentialResources()
         {
-            var tmpImporterType = Type.GetType("TMPro.EditorUtilities.TMP_PackageResourceImporter, Unity.TextMeshPro.Editor");
-            if (tmpImporterType != null)
+            // メニューコマンドを直接実行
+            // Window > TextMeshPro > Import TMP Essential Resources
+            if (EditorApplication.ExecuteMenuItem("Window/TextMeshPro/Import TMP Essential Resources"))
             {
-                var importMethod = tmpImporterType.GetMethod("ImportProjectResourcesMenu",
-                    System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-                importMethod?.Invoke(null, null);
+                return;
+            }
 
-                EditorApplication.delayCall += () =>
-                {
-                    EditorUtility.DisplayDialog(
-                        "インポート完了",
-                        "TextMeshPro Essential Resourcesのインポートが完了しました。",
-                        "OK"
-                    );
-                };
-            }
-            else
-            {
-                EditorUtility.DisplayDialog(
-                    "エラー",
-                    "TextMeshProのインポーターが見つかりませんでした。\n" +
-                    "Package ManagerからTextMeshProパッケージをインストールしてください。",
-                    "OK"
-                );
-            }
+            // メニューが見つからない場合はエラー表示
+            EditorUtility.DisplayDialog(
+                "エラー",
+                "TextMeshProメニューが見つかりませんでした。\n" +
+                "Window > TextMeshPro > Import TMP Essential Resources から手動でインポートしてください。",
+                "OK"
+            );
         }
 
         private void CreateTMPFontAsset()
