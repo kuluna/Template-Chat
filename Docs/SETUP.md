@@ -9,6 +9,8 @@
 2. Unity Hubを起動して、Installs > Install Editor を押してください。バージョンはLTSと書かれたもの(Unity6.0がおすすめ)を選んでください。
 3. Add modulesのリストからは 「Web Build Support」にチェックを入れてインストールしてください。
 
+インストールが終わったらUnity Hubの
+
 ## 1. パッケージのインストール
 1. Unity エディタで **Window** -> **Package Manager** を開きます  
 ![pm](image/pm.png)
@@ -16,7 +18,7 @@
 2. 左上の **「+」** ボタンをクリックし、**「Add package from git URL...」** を選択します  
 ![add git](image/add_git.png)
 
-3. 以下の URL を入力して **「Add」** をクリックします：  
+3. 以下の URL を入力して **「Install」** をクリックします：  
 `https://github.com/kuluna/Template-Chat.git?path=Assets/Chat`
 
 ---
