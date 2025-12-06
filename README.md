@@ -59,6 +59,7 @@ Assets/
 | `@if` | `@if, <varName>, <expected>, <label>` | 条件分岐 |
 | `@goto` | `@goto, <label>` | 無条件ジャンプ |
 | `@label` | `@label, <labelName>` | ジャンプ先定義 |
+| `@message` | `@message, <message>` | システムメッセージ表示 |
 
 ### シナリオ例
 

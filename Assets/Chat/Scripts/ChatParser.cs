@@ -46,6 +46,7 @@ namespace Template.Chat
                 "@label" => new LabelChatCommand(index, args),
                 "@wait" => new WaitChatCommand(index, args),
                 "@goto" => new GotoChatCommand(index, args),
+                "@message" => new MessageChatCommand(index, args),
                 _ => new UnknownChatCommand(index, args),
             };
         }
@@ -58,6 +59,7 @@ namespace Template.Chat
             CommandType.Text,
             CommandType.Choice,
             CommandType.If,
+            CommandType.Message,
             CommandType.Wait,
             CommandType.Goto
             };

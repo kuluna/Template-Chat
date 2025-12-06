@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 #nullable enable
@@ -25,6 +26,7 @@ namespace Template.Chat
         [SerializeField] private ChatChoiceDialog choiceDialog = null!;
         [SerializeField] private ImageViewer imageViewer = null!;
         [SerializeField] private DescriptionPanel descriptionPanel = null!;
+        [SerializeField] private Button resetButton = null!;
 
         private readonly ChatEventPresenter presenter = new();
         private ChoiceChatCommand? currentChoiceCommand;
@@ -88,9 +90,25 @@ namespace Template.Chat
                 presenter.SetVariable(currentChoiceCommand.VariableName, choiceText);
                 currentChoiceCommand = null;
 
-                // 次のコマンドへ進む
-                _ = presenter.Next();
+                // チャットに選択したテキストを表示
+                Awaitable.MainThreadAsync().OnCompleted(async () =>
+                {
+                    var node = Instantiate(chatNodePrefab, chatContentTransform);
+                    node.SetUpText(ChatNode.NodePosition.Right, choiceText, null);
+
+                    // スクロールを最下部に移動
+                    await Awaitable.EndOfFrameAsync();
+                    chatScrollView.verticalNormalizedPosition = 0f;
+
+                    // 次のコマンドへ進む
+                    _ = presenter.Next();
+                });
             }
+        }
+
+        public void OnClickReset()
+        {
+            SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().name);
         }
     }
 }

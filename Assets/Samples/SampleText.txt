@@ -4,8 +4,11 @@
 @image, character
 @wait, 1
 
+@message, システムメッセージを表示するよ！
+
 # 分岐サンプル: Goto と Choice の使用例
 @text, 質問があります。あなたは猫派？犬派？
+@wait, 1
 @choice, animal_type, 猫派, 犬派, どちらでもない
 
 # 選択結果による分岐
