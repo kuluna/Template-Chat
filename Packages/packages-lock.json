@@ -124,7 +124,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.inputsystem": {
-      "version": "1.14.2",
+      "version": "1.16.0",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -260,7 +260,7 @@
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "3.2.1"
       },
-      "hash": "d688872de1e0ea14b503c187add63ce6a9f4fa2b"
+      "hash": "17470e6580d9386e473af20946cd1453c0f9967b"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
