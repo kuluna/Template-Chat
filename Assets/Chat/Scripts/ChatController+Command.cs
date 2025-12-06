@@ -44,6 +44,7 @@ namespace Template.Chat
         {
             Debug.Log("Chat終了");
             Instantiate(endNodePrefab, chatContentTransform);
+            resetButton.gameObject.SetActive(true);
             await Task.CompletedTask;
         }
 
@@ -51,6 +52,12 @@ namespace Template.Chat
         {
             currentChoiceCommand = command;
             choiceDialog.Setup(command, OnClickSelectChoice);
+        }
+
+        public async Awaitable ShowMessage(MessageChatCommand command)
+        {
+            descriptionPanel.Show(command.Message);
+            await Awaitable.WaitForSecondsAsync(0.1f);
         }
     }
 }

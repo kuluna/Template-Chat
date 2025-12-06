@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 
 namespace Template.Chat
 {
-
     ////////////////// Define abstract classes //////////////////
 
     public abstract class ChatCommand : IChatCommand
@@ -43,6 +42,7 @@ namespace Template.Chat
         Choice,
         If,
         Label,
+        Message,
         Wait,
         Goto
     }
@@ -341,6 +341,37 @@ namespace Template.Chat
             if (string.IsNullOrWhiteSpace(Args[1]))
             {
                 throw new ChatCommandException(this, "ラベル名が空です。\nex: @label, <ラベル名>");
+            }
+        }
+    }
+
+    /// <summary>
+    /// システムメッセージ表示コマンド
+    /// <para>
+    /// example:<br/>
+    /// @message, システムからのお知らせです
+    /// </para>
+    /// </summary>
+    public class MessageChatCommand : ChatCommand
+    {
+        public override CommandType Type => CommandType.Message;
+        public string Message { get; }
+
+        public MessageChatCommand(int index, string[] args) : base(index, args)
+        {
+            Message = string.Join(", ", Args[1..]);
+        }
+
+        public override void Check()
+        {
+            if (Args.Length < 2)
+            {
+                throw new ChatCommandException(this, "必要な引数が不足しています。\nex: @message, <メッセージテキスト>");
+            }
+
+            if (string.IsNullOrWhiteSpace(Args[1]))
+            {
+                throw new ChatCommandException(this, "メッセージテキストが空です。\nex: @message, <メッセージテキスト>");
             }
         }
     }

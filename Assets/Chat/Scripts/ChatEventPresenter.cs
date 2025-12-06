@@ -155,6 +155,10 @@ namespace Template.Chat
                     // ラベル自体は何もしない
                     break;
 
+                case MessageChatCommand messageCommand:
+                    await Listener.ShowMessage(messageCommand);
+                    break;
+
                 default:
                     Debug.LogWarning($"Unknown command type: {command.Type} at Line {command.Index}");
                     break;
@@ -185,6 +189,7 @@ namespace Template.Chat
         {
             public Awaitable ShowImage(ImageChatCommand command);
             public Awaitable ShowText(TextChatCommand command);
+            public Awaitable ShowMessage(MessageChatCommand command);
             public void ShowChoice(ChoiceChatCommand command);
             public Awaitable OnEndChat();
         }

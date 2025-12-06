@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 #nullable enable
@@ -25,6 +26,7 @@ namespace Template.Chat
         [SerializeField] private ChatChoiceDialog choiceDialog = null!;
         [SerializeField] private ImageViewer imageViewer = null!;
         [SerializeField] private DescriptionPanel descriptionPanel = null!;
+        [SerializeField] private Button resetButton = null!;
 
         private readonly ChatEventPresenter presenter = new();
         private ChoiceChatCommand? currentChoiceCommand;
@@ -91,6 +93,11 @@ namespace Template.Chat
                 // 次のコマンドへ進む
                 _ = presenter.Next();
             }
+        }
+
+        public void OnClickReset()
+        {
+            SceneManager.LoadSceneAsync(SceneManager.GetActiveScene().name);
         }
     }
 }
