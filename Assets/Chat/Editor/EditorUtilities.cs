@@ -20,7 +20,7 @@ namespace Template.Chat.Editor
             var parent = Path.GetDirectoryName(folderPath)?.Replace("\\", "/");
             var folderName = Path.GetFileName(folderPath);
 
-            if (!string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
+            if (parent != null && !string.IsNullOrEmpty(parent) && !AssetDatabase.IsValidFolder(parent))
             {
                 EnsureFolderExists(parent);
             }
