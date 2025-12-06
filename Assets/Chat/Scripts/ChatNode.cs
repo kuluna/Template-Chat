@@ -51,6 +51,11 @@ namespace Template.Chat
                     backgroundImage.color = rightColor;
                     iconImage.transform.parent.gameObject.SetActive(false);
                     iconImage.sprite = null;
+
+                    if (TryGetComponent<VerticalLayoutGroup>(out var layoutGroup))
+                    {
+                        layoutGroup.childAlignment = TextAnchor.UpperRight;
+                    }
                     break;
             }
 

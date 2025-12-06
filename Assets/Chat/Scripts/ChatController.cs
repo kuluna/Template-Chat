@@ -90,8 +90,19 @@ namespace Template.Chat
                 presenter.SetVariable(currentChoiceCommand.VariableName, choiceText);
                 currentChoiceCommand = null;
 
-                // 次のコマンドへ進む
-                _ = presenter.Next();
+                // チャットに選択したテキストを表示
+                Awaitable.MainThreadAsync().OnCompleted(async () =>
+                {
+                    var node = Instantiate(chatNodePrefab, chatContentTransform);
+                    node.SetUpText(ChatNode.NodePosition.Right, choiceText, null);
+
+                    // スクロールを最下部に移動
+                    await Awaitable.EndOfFrameAsync();
+                    chatScrollView.verticalNormalizedPosition = 0f;
+
+                    // 次のコマンドへ進む
+                    _ = presenter.Next();
+                });
             }
         }
 
